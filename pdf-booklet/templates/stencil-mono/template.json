@@ -1,0 +1,25 @@
+{
+  "name": "ステンシル・モノクロ (zine向け)",
+  "description": "黒1色のみで組む、ステンシル/リソグラフ風の冊子デザイン。ベタ面の白抜きラベル、巨大な章番号、版ズレ風のオフセットが特徴。同人誌・zineのモノクロ印刷入稿向けで、A4出力をA5に2面付けする前提で文字を大きめに組んである。",
+  "palette": [
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000"
+  ],
+  "nombre": {
+    "font_size": "12pt",
+    "color": "#000000",
+    "font_family": "'Hiragino Sans', 'Noto Sans CJK JP'",
+    "align": "center",
+    "format": "{page}",
+    "skip_cover": true
+  },
+  "pagination": {
+    "chapter_inline": "all"
+  }
+}

@@ -1,0 +1,350 @@
+/* ============================================
+   案C: ソフトUI × 章カラー制 style_c.css
+   ベース: ソフトグレー地 + ニューモフィックカード
+   差し色: 章ごとのビビッドアクセント（--accent）
+   ============================================ */
+
+:root {
+  --paper: #F0F2F6;
+  --card: #F4F6FA;
+  --ink: #2A2D34;
+  --sub: #7A8194;
+  --line: #E3E6EE;
+  --sans: "Noto Sans CJK JP", sans-serif;
+  --serif: "Noto Serif CJK JP", serif;
+  --accent: #3D6BFF; /* 既定。章ごとに上書き */
+}
+
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { background: var(--paper); }
+
+body {
+  font-family: var(--sans);
+  font-size: 9.5pt;
+  line-height: 1.9;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.page-body { padding: 0 18mm 0 18mm; }
+
+/* ---------- カード共通 ---------- */
+.card {
+  background: var(--card);
+  border-radius: 4mm;
+  border: 1px solid var(--line);
+}
+
+/* ---------- 表紙 ---------- */
+.cover {
+  height: 297mm;
+  padding: 14mm 20mm 16mm 20mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  page-break-after: always;
+}
+.cover-card {
+  background: var(--card);
+  border-radius: 6mm;
+  border: 1px solid var(--line);
+  padding: 20mm 16mm;
+}
+.cover-label {
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  color: var(--sub);
+}
+.cover-dots { margin-top: 4mm; display: flex; gap: 2.2mm; }
+.cover-dots span {
+  width: 3.4mm; height: 3.4mm; border-radius: 50%;
+  display: inline-block;
+}
+.cover-title {
+  font-family: var(--serif);
+  font-size: 27pt;
+  font-weight: 900;
+  line-height: 1.55;
+  margin-top: 14mm;
+  letter-spacing: 0.03em;
+  color: #8B5CF6;
+}
+.cover-subtitle {
+  font-family: var(--serif);
+  font-size: 12.5pt;
+  font-weight: 700;
+  color: #3D6BFF;
+  margin-top: 4mm;
+}
+.cover-meta {
+  margin-top: 16mm;
+  font-size: 9pt;
+  line-height: 2.1;
+  color: var(--ink);
+}
+.cover-meta .ver {
+  display: inline-block;
+  background: #E4E8F0;
+  border-radius: 999px;
+  color: #5A6275;
+  font-weight: 700;
+  font-size: 8.5pt;
+  padding: 0.8mm 4.5mm;
+  margin-bottom: 3mm;
+  letter-spacing: 0.1em;
+}
+
+/* ---------- 章（sectionに--accentが入る） ---------- */
+section.chapter { display: block; }
+
+.chapter-head {
+  page-break-after: avoid;
+  margin: 0 0 8mm 0;
+  padding-bottom: 3mm;
+}
+.chapter-head .ch-no {
+  font-family: var(--serif);
+  font-size: 46pt;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+.chapter-head .ch-label {
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--sub);
+  margin: 1.5mm 0 1mm 0;
+}
+.chapter-head .ch-title {
+  font-family: var(--serif);
+  font-size: 21pt;
+  font-weight: 900;
+  line-height: 1.45;
+}
+.chapter-head .ch-bar {
+  width: 70mm; height: 1.6mm;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent),
+              color-mix(in srgb, var(--accent) 0%, transparent));
+  margin-top: 3mm;
+}
+
+/* ---------- Q見出し ---------- */
+h3 {
+  page-break-after: avoid;
+  font-size: 12.5pt;
+  font-weight: 900;
+  margin: 9mm 0 3.5mm 0;
+  line-height: 1.5;
+}
+h3 .q-marker {
+  display: inline-block;
+  font-size: 8.5pt;
+  font-weight: 900;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, #ffffff);
+  border-radius: 999px;
+  padding: 0.6mm 3.5mm;
+  margin-right: 2.5mm;
+  vertical-align: 1px;
+  letter-spacing: 0.05em;
+}
+h3.column-head { margin: 0 0 2mm 0; font-size: 10.5pt; }
+
+/* ---------- 本文 ---------- */
+p { margin: 0 0 3.5mm 0; text-align: left; }
+strong { color: var(--accent); font-weight: 900; }
+
+ul, ol { margin: 0 0 3.5mm 0; padding-left: 6mm; }
+li { margin-bottom: 1.4mm; }
+li:last-child { margin-bottom: 0; }
+li::marker { color: var(--accent); }
+
+/* ---------- 表 ---------- */
+.table-wrap { margin: 3mm 0 5.5mm 0; page-break-inside: avoid; }
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 8.8pt;
+  border-radius: 3mm;
+  border: 1px solid var(--line);
+}
+th {
+  font-weight: 900;
+  color: #fff;
+  background: var(--accent);
+  padding: 2mm 3.5mm;
+  text-align: left;
+}
+th:first-child { border-top-left-radius: 3mm; }
+th:last-child  { border-top-right-radius: 3mm; }
+td {
+  padding: 2mm 3.5mm;
+  background: var(--card);
+  border-top: 1px solid #E3E6EE;
+  vertical-align: top;
+}
+tr:last-child td:first-child { border-bottom-left-radius: 3mm; }
+tr:last-child td:last-child  { border-bottom-right-radius: 3mm; }
+
+/* ---------- 引用（注意書き / NG-OK） ---------- */
+blockquote {
+  background: var(--card);
+  border-radius: 3mm;
+  border: 1px solid var(--line);
+  border-left: 1.6mm solid var(--accent);
+  padding: 3.5mm 5mm;
+  margin: 3mm 0 5mm 0;
+  font-size: 9pt;
+  page-break-inside: avoid;
+}
+blockquote p { margin-bottom: 2mm; }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote .bq-row {
+  border-radius: 2mm;
+  padding: 2mm 3.5mm;
+  margin: 0 0 2mm 0;
+}
+blockquote .bq-row:last-child { margin-bottom: 0; }
+blockquote .ng-row { background: #FBE9E7; }
+blockquote .ok-row { background: #E7F5ED; }
+.bq-badge {
+  display: inline-block;
+  font-size: 7.5pt;
+  font-weight: 900;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.2mm 3mm;
+  margin-right: 2.5mm;
+  letter-spacing: 0.1em;
+}
+.bq-badge.ng { background: #DC4437; }
+.bq-badge.ok { background: #1E9B5A; }
+
+/* ---------- コード ---------- */
+pre {
+  background: #E7EAF1;
+  border-radius: 3mm;
+  padding: 4mm 5mm;
+  margin: 3mm 0 1.5mm 0;
+  font-size: 8.3pt;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  page-break-inside: avoid;
+}
+code {
+  font-family: "Noto Sans Mono CJK JP", var(--sans);
+  background: #E9ECF3;
+  border-radius: 1mm;
+  padding: 0 1.2mm;
+  font-size: 0.95em;
+}
+pre code { background: none; padding: 0; }
+
+/* ---------- 要点整理カード ---------- */
+.summary-box {
+  background: var(--card);
+  border-radius: 4mm;
+  border: 1px solid var(--line);
+  margin: 2mm 0 4mm 0;
+  padding: 4mm 5.5mm 4.5mm 5.5mm;
+  page-break-inside: avoid;
+}
+.summary-box .summary-title {
+  display: inline-block;
+  font-size: 8.5pt;
+  font-weight: 900;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 0.8mm 4.5mm;
+  letter-spacing: 0.12em;
+  margin-bottom: 2.5mm;
+}
+.summary-box ul { margin: 0 0 0 5mm; }
+.summary-box li { margin-bottom: 1mm; }
+
+/* ---------- 覚え方（蛍光マーカー風） ---------- */
+p.oboekata {
+  margin: 4mm 0 5.5mm 0;
+  font-weight: 900;
+  page-break-inside: avoid;
+  background: color-mix(in srgb, var(--accent) 9%, #ffffff);
+  color: var(--ink);
+  border-radius: 2.5mm;
+  padding: 2.5mm 4.5mm;
+  display: inline-block;
+}
+p.oboekata .hi { background: none; }
+
+/* ---------- コラム ---------- */
+.column-box {
+  background: var(--card);
+  border-radius: 4mm;
+  border: 1px solid var(--line);
+  padding: 4.5mm 5.5mm;
+  margin: 6mm 0 2mm 0;
+  page-break-inside: avoid;
+}
+.column-box .column-label {
+  display: inline-block;
+  font-size: 7.5pt;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.3mm 3.5mm;
+  margin-bottom: 2mm;
+}
+
+/* ---------- その他 ---------- */
+hr { border: none; border-top: 1px solid #DDE1EA; margin: 6mm 0; }
+em { font-style: normal; }
+p.colophon {
+  font-size: 8pt;
+  color: var(--sub);
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- 改ページ制御 ---------- */
+.qa-block { display: block; }
+.qa-block.atomic, .column-box.atomic { break-inside: avoid; page-break-inside: avoid; }
+p, li { orphans: 3; widows: 3; }
+.chapter-head { break-after: avoid; }
+
+/* ---------- ヒントカード（記法: 「ヒント: 」段落） ---------- */
+.hint-box {
+  background: var(--card);
+  border-radius: 4mm;
+  border: 1px solid var(--line);
+  border-left: 1.6mm solid var(--accent);
+  padding: 4.5mm 5.5mm;
+  margin: 6mm 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.hint-box .hint-label {
+  display: inline-block;
+  font-size: 7.5pt;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.3mm 3.5mm;
+  margin-bottom: 2mm;
+}
+.hint-box p:last-child { margin-bottom: 0; }
+
+/* ---------- リスト項目「**用語**: 説明」→ 2行構成 ---------- */
+li.li-def { margin-bottom: 2.6mm; }
+li.li-def > strong { display: block; line-height: 1.6; }
+li.li-def .li-desc { display: block; color: var(--ink); }
