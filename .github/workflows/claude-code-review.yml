@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
       id-token: write
 
@@ -43,3 +43,56 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
 
+      - name: レビュー結果を集計して判定を投稿
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          OUTCOME: ${{ steps.claude-review.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -uo pipefail
+
+          gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/comments" \
+            --jq '.[] | select(.user.login == "claude[bot]") | .body
+                  | if test("CRITICAL") then "CRITICAL"
+                    elif test("WARNING") then "WARNING"
+                    elif test("INFO") then "INFO"
+                    else "UNLABELED" end' > labels.txt || : > labels.txt
+
+          count() { grep -cxF "$1" labels.txt || true; }
+          CRITICAL=$(count CRITICAL)
+          WARNING=$(count WARNING)
+          INFO=$(count INFO)
+          UNLABELED=$(count UNLABELED)
+
+          if [ "$OUTCOME" != "success" ]; then
+            VERDICT="⚠️ レビューが正常終了しませんでした(ステップの結果: \`$OUTCOME\`)。判定は行えません。"
+          elif [ "$CRITICAL" -gt 0 ]; then
+            VERDICT="❌ **マージ要件を満たしていません** — CRITICAL が ${CRITICAL} 件あります。"
+          else
+            VERDICT="✅ **マージ要件を満たしています** — CRITICAL は 0 件です。"
+          fi
+
+          {
+            echo "## Claude Code Review"
+            echo
+            echo "$VERDICT"
+            echo
+            echo "| レベル | 件数 |"
+            echo "| --- | --- |"
+            echo "| 🔴 CRITICAL | ${CRITICAL} |"
+            echo "| 🟡 WARNING | ${WARNING} |"
+            echo "| 🔵 INFO | ${INFO} |"
+            if [ "$UNLABELED" -gt 0 ]; then
+              echo "| ラベルなし | ${UNLABELED} |"
+            fi
+            echo
+            echo "内訳は各インラインコメントを参照。このコメント自体は指摘の有無にかかわらず投稿されるため、"
+            echo "本コメントが無い場合はワークフローが発火していない。"
+            echo
+            echo "[実行ログ]($RUN_URL)"
+          } > body.md
+
+          gh pr comment "$PR_NUMBER" --body-file body.md
