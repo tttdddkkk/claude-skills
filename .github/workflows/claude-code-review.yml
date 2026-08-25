@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
       id-token: write
 
@@ -43,3 +43,20 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
 
+      - name: レビュー実行を記録
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          OUTCOME: ${{ steps.claude-review.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          cat > body.md <<EOF
+          Claude Code Review を実行しました(ステップの結果: \`$OUTCOME\`)。
+
+          指摘があれば、この PR にインラインコメントとして投稿されています。インラインコメントが無ければ「レビューは実行されたが指摘なし」を意味します。
+
+          [実行ログ]($RUN_URL)
+          EOF
+          gh pr comment "$PR_NUMBER" --body-file body.md
