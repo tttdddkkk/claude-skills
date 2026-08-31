@@ -1,0 +1,33 @@
+# 前提（どちらも欠けると必ず落ちる）:
+#   1. リポジトリ直下に .node-version がある
+#   2. package.json に lint / typecheck / test の script がある
+# pnpm 前提。他のパッケージマネージャは references/ci-recipes.md の対応表で読み替える。
+# actions のタグは執筆時点の目安。導入時に現行メジャーを確認すること。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test

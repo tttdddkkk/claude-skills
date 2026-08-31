@@ -1,0 +1,43 @@
+# 依存
+node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+
+# ビルド生成物
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+*.tsbuildinfo
+
+# テスト / カバレッジ
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# 環境変数（example は追跡する）
+.env
+.env.*
+!.env.example
+
+# ログ
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# エディタ（チームで共有する設定は除外しない）
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
