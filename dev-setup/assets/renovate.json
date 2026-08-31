@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Tokyo",
+  "schedule": ["before 9am on monday"],
+  "prConcurrentLimit": 3,
+  "packageRules": [
+    {
+      "description": "patch と minor はまとめて1本のPRにする",
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "non-major dependencies"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "schedule": ["at any time"],
+    "labels": ["security"]
+  }
+}

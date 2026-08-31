@@ -1,0 +1,25 @@
+# 改行コードをリポジトリ内では LF に正規化する
+* text=auto eol=lf
+
+# 実行可能スクリプトは LF 固定
+*.sh text eol=lf
+
+# Windows 専用ファイルは CRLF
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# バイナリは差分を取らない
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+
+# 生成物は diff / GitHub の言語統計から除外
+*.lock linguist-generated=true -diff
+pnpm-lock.yaml linguist-generated=true -diff
+package-lock.json linguist-generated=true -diff
