@@ -22,6 +22,7 @@ Claude Code 用のカスタムスキル集。各スキルは `<skill-name>/SKILL
 - SKILL.md の記述の欠陥。手順に実行不能な記述がある、前提条件や必要なツールの記載が抜けている、`description` のトリガー条件が曖昧で発火すべき場面が判別できない、既存スキルの `description` とトリガーが重複してどちらが呼ばれるか決まらない、手順の途中に確認ステップ(プレビュー、推測箇所の明示)が無く生成物がそのまま確定される
 - `engine.py` / `scan_h3_orphans.py` のロジック誤り、未処理例外によるクラッシュ
 - `engine.py`・`HTML_CONTRACT.md`・各テンプレートの `style.css` の間の不整合。クラス名や構造の変更が片側にしか入っていない場合
+- スキルの `assets/` に置いた雛形と、SKILL.md の手順の不整合。雛形が参照するファイルや前提（`.node-version`、`package.json` の scripts、hook の登録コマンド）を作る手順が書かれていない場合を含む
 
 **🟡 WARNING** — 動作はするが問題が起きうるもの。
 
