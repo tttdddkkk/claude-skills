@@ -83,7 +83,8 @@ npm / pnpm で入れた場合は postinstall が登録まで済ませる（検�
 `brew install lefthook` のようにパッケージマネージャ外で入れた場合は `lefthook install` を実行する。
 
 **pnpm 10 以降は依存の postinstall を既定で実行しない**ため、承認しないと登録されないうえに
-install 自体が失敗し、`pnpm run` 系がすべて動かなくなる（§SKILL.md 5 を参照）。
+install 自体が失敗し、`pnpm run` 系がすべて動かなくなる。`pnpm-workspace.yaml` に
+`allowBuilds: { lefthook: true }` を書く（マップ形式。詳細は SKILL.md §5）。
 登録漏れが起きていないかは `ls .git/hooks/` で確認できる。
 
 `assets/lefthook.yml` は `jobs` 構文で書いてある（lefthook 2.1.12 の公式ドキュメントで確認）。

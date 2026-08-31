@@ -214,10 +214,21 @@ CI の書き方は `references/ci-recipes.md` を読む。
   依存の postinstall を既定で実行しない。lefthook のようにインストール時処理を持つ
   パッケージがあると install が非ゼロで終わり、**以後すべての `pnpm run <script>` が
   依存状態チェックで失敗する**（lint も typecheck も動かない）。エラーの見た目が
-  スタックトレースなので原因に辿り着きにくい。`pnpm approve-builds` で対象を承認するか、
-  `pnpm-workspace.yaml` の設定で許可する。検証時（pnpm 11.22.0）は
-  `dangerouslyAllowAllBuilds: true` で通ったが、パッケージを限定する書き方は
-  導入時に現行ドキュメントで確認すること。
+  スタックトレースなので原因に辿り着きにくい。
+
+  `pnpm-workspace.yaml` に許可を書く。**`allowBuilds` はリストではなくマップ**で、
+  値に `true` / `false` を取る（リストで書くと無視されて症状が変わらない）。
+
+  ```yaml
+  # pnpm-workspace.yaml
+  allowBuilds:
+    lefthook: true
+  ```
+
+  `pnpm approve-builds` を対話で実行しても、同じ `allowBuilds` に書き込まれる。
+  `dangerouslyAllowAllBuilds: true` は全依存のスクリプトを無条件で実行するので使わない。
+  なお `onlyBuiltDependencies` / `neverBuiltDependencies` などは **pnpm 11 で削除され**、
+  `allowBuilds` に統合されている。既存プロジェクトで見かけたら移行が要る。
 - **Git hooks を入れた場合は、`.git/hooks` への登録まで確認する。** npm / pnpm 経由で
   lefthook を入れた場合は postinstall が自動で登録する（`sync hooks: pre-commit, post-merge`
   と出る）。ただし上記のビルド遮断が起きていると登録もされない。brew 等で入れた場合や、
