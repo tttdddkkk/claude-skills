@@ -1,0 +1,24 @@
+# pnpm 前提。検出したパッケージマネージャに読み替える（npm なら `npx biome ...`）。
+# `jobs` は現行ドキュメントの書式（lefthook 2.1.12 時点で確認）。`commands` も別の書き方として
+# 存在するため、既存プロジェクトが `commands` で書かれていれば無理に統一しない。
+#
+# 変更されたファイルだけを対象にする。
+# 型チェックやテストはここに入れない（コミットが遅くなり --no-verify が常用される）。
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format-and-lint
+      glob: "*.{js,jsx,ts,tsx,json,jsonc,css}"
+      run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+# pull / マージのあと、lockfile が変わったときだけ依存を同期する。
+# 無条件に走らせるとブランチ切替が遅くなり、hook ごと無効化されるので条件を外さない。
+# files の実行結果が空なら job はスキップされる、という lefthook の仕様を使っている。
+# lockfile 名はパッケージマネージャに合わせて変える（npm: package-lock.json / yarn: yarn.lock）。
+post-merge:
+  jobs:
+    - name: sync-deps
+      files: git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD
+      glob: "pnpm-lock.yaml"
+      run: pnpm install --frozen-lockfile
