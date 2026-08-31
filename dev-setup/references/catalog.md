@@ -78,11 +78,13 @@ Windows/macOS 混在チームや、CI とローカルで差分が出る場合に
 `lefthook` を推奨（単一バイナリ、YAML設定、並列実行、Node 非依存）。
 `husky` + `lint-staged` は既存プロジェクトで使われていれば維持でよい。
 
-**`lefthook.yml` を置くだけでは hook は動かない。** 本体の導入（`pnpm add -D lefthook` 等、
-または `brew install lefthook`）と、`lefthook install` による `.git/hooks` への登録が要る。
-install を忘れると設定が静かに無効のままになり、「入れたつもり」が一番起きやすい箇所。
-チームで使う場合は、`package.json` の `prepare` script に `lefthook install` を入れて
-`install` 時に自動登録させる方法もある（他の開発者の登録漏れを防げる）。
+**`lefthook.yml` を置くだけでは hook は動かない。** 本体の導入と、`.git/hooks` への登録が要る。
+npm / pnpm で入れた場合は postinstall が登録まで済ませる（検証済み: lefthook 2.1.12）。
+`brew install lefthook` のようにパッケージマネージャ外で入れた場合は `lefthook install` を実行する。
+
+**pnpm 10 以降は依存の postinstall を既定で実行しない**ため、承認しないと登録されないうえに
+install 自体が失敗し、`pnpm run` 系がすべて動かなくなる（§SKILL.md 5 を参照）。
+登録漏れが起きていないかは `ls .git/hooks/` で確認できる。
 
 `assets/lefthook.yml` は `jobs` 構文で書いてある（lefthook 2.1.12 の公式ドキュメントで確認）。
 `commands` も別の書き方として存在するので、既存プロジェクトが `commands` で書かれていれば

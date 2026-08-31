@@ -55,7 +55,7 @@ CI の骨格（§`references/ci-recipes.md` の「必ず入れる4つの設定�
 ```bash
 ls -a                                    # 既存の設定ファイル
 cat package.json 2>/dev/null             # scripts / deps / packageManager / private
-ls *.lock *lock.yaml *lock.json 2>/dev/null  # パッケージマネージャ特定
+ls -a | grep -iE 'lock\.(yaml|json)$|\.lock$'  # パッケージマネージャ特定（zsh でも安全）
 ls .github/workflows/ 2>/dev/null        # 既存CI
 cat tsconfig.json 2>/dev/null
 git log --oneline -20 2>/dev/null        # コミット規約の有無、活動状況
@@ -141,6 +141,9 @@ Q4. CIは？
 ### 4. 適用
 
 `assets/` のテンプレートをベースに、検出結果に合わせて調整して配置する。
+**1ファイルに複数の設定が入っている雛形は、決定表で許可された分だけ残す。**
+`lefthook.yml` は `pre-commit`（△＝標準では提案のみ）と `post-merge`（○＝標準では入れる）の
+両方を含むので、丸ごとコピーすると承認していない pre-commit まで入る。
 テンプレートをそのままコピーするのではなく、検出した内容（パッケージマネージャ、Node バージョン、
 既存 scripts 名）を反映させること。
 
@@ -207,9 +210,19 @@ CI の書き方は `references/ci-recipes.md` を読む。
 
 - **lint が大量にエラーを吐く場合**：ルールを緩めるか、自動修正をかけるか、
   段階導入（新規ファイルのみ対象）にするかを提案する。エラーまみれのまま放置しない。
-- **Git hooks を入れた場合は `lefthook install` まで実行する。** `lefthook.yml` を置いても
-  `.git/hooks` に登録されなければ何も起きない。登録後、実際に対象ファイルを変更して
-  コミットし、フォーマットが走ることを確認する。ここを飛ばすと「静かに無効」になる。
+- **pnpm で `ERR_PNPM_IGNORED_BUILDS` が出たら、先にそれを解消する。** pnpm 10 以降は
+  依存の postinstall を既定で実行しない。lefthook のようにインストール時処理を持つ
+  パッケージがあると install が非ゼロで終わり、**以後すべての `pnpm run <script>` が
+  依存状態チェックで失敗する**（lint も typecheck も動かない）。エラーの見た目が
+  スタックトレースなので原因に辿り着きにくい。`pnpm approve-builds` で対象を承認するか、
+  `pnpm-workspace.yaml` の設定で許可する。検証時（pnpm 11.22.0）は
+  `dangerouslyAllowAllBuilds: true` で通ったが、パッケージを限定する書き方は
+  導入時に現行ドキュメントで確認すること。
+- **Git hooks を入れた場合は、`.git/hooks` への登録まで確認する。** npm / pnpm 経由で
+  lefthook を入れた場合は postinstall が自動で登録する（`sync hooks: pre-commit, post-merge`
+  と出る）。ただし上記のビルド遮断が起きていると登録もされない。brew 等で入れた場合や、
+  登録が確認できない場合は `lefthook install` を明示的に実行する。
+  登録後、実際に対象ファイルを変更してコミットし、フォーマットが走ることを確認する。
 - **型チェックが大量にエラーを吐く場合**：`noUncheckedIndexedAccess` や
   `exactOptionalPropertyTypes` は既存コードで数百件出ることがある。まず `strict: true` だけで
   通し、追加オプションは1つずつ有効にして件数を見る。通らなかったオプションは無理に残さず外し、
