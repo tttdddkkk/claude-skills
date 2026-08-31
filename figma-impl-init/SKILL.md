@@ -21,10 +21,14 @@ ls .figma-impl/conversion.md .figma-impl/defaults.md 2>/dev/null
 
 ## 前提
 
+- **`figma-impl` スキルが同じ親ディレクトリに置かれていること。**`scan-file.js` は
+  `figma-impl/scripts/figma-api.js` を共有モジュールとして参照する。**この2つは対で導入する。**
+  片方だけをコピーすると `scan-file.js` は起動しない
+- Node.js（`node` コマンドが使えること）
 - `FIGMA_TOKEN` が環境変数に設定されていること（Figma の Settings → Security → Personal access tokens）
 - 対象 Figma ファイルの URL
 
-どちらか欠けている場合はここで止まる。取得できないまま進めると、実測のはずの値が推測で埋まる。
+いずれか欠けている場合はここで止まる。取得できないまま進めると、実測のはずの値が推測で埋まる。
 
 ## 手順
 

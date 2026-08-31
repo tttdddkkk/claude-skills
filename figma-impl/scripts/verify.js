@@ -80,19 +80,33 @@ function classify(expected, actual, tol) {
   return rows;
 }
 
+function loadChromium() {
+  const tried = [];
+  for (const base of [process.cwd(), __dirname]) {
+    try {
+      return require(require.resolve('playwright', { paths: [base] })).chromium;
+    } catch {
+      tried.push(base);
+    }
+  }
+  console.error(
+    'playwright が見つかりません。検証したいプロジェクトのルートで入れてください:\n' +
+      '  npm i -D playwright && npx playwright install chromium\n' +
+      `探索したディレクトリ: ${tried.join(' , ')}`
+  );
+  process.exit(1);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.url) {
     console.error('使い方: node verify.js --url <ページURL> [--nodes nodes.json] [--tolerance 1]');
     process.exit(1);
   }
-  let chromium;
-  try {
-    ({ chromium } = require('playwright'));
-  } catch {
-    console.error('playwright が見つかりません。`npm i -D playwright && npx playwright install chromium` を実行してください。');
-    process.exit(1);
-  }
+  // require() はこのスクリプト自身のディレクトリを起点に解決されるため、
+  // 素直に書くとユーザーのプロジェクトに入れた playwright が見つからない。
+  // cwd を先に探し、次にスキル同梱分を探す。
+  const chromium = loadChromium();
 
   const data = JSON.parse(fs.readFileSync(args.nodes, 'utf8'));
   const expectedById = new Map(data.texts.map((t) => [t.id, t]));

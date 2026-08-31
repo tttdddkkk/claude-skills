@@ -26,14 +26,23 @@ ls .figma-impl/conversion.md .figma-impl/defaults.md 2>/dev/null
 **AI が Figma を直接読まない。**スクリプトで機械的に取る。
 
 ```bash
-node ~/.claude/skills/figma-impl/scripts/fetch-node.js <FigmaのURL>
+# Figma で対象レイヤーを選択 → 右クリック → Copy link to selection
+# で得られる URL には ?node-id= が含まれる。それをそのまま渡す
+node ~/.claude/skills/figma-impl/scripts/fetch-node.js "<FigmaのURL>"
+
+# node-id を明示的に渡すこともできる
+node ~/.claude/skills/figma-impl/scripts/fetch-node.js "<FigmaのURL>" 123:456 123:789
 ```
+
+**ファイル URL（`?node-id=` を含まないもの）を渡すとエラーになる。**画面全体を1回で取ろうとせず、末端のコンポーネントを1つずつ指定する運用と対になっている。
 
 出力は `.figma-impl/tmp/nodes.json` と `nodes.md`。
 
 **単位を小さく保つ。**画面全体ではなく、末端のコンポーネント1つずつを指定する。ツリーが深いほど、取得漏れが実装側の推測に置き換わる余地が増える。
 
 `nodes.md` の「欠損（null）の一覧」が、**そのまま「AIが創作する場所」のリスト**になる。ここは埋まっていないのが正しい状態で、埋まっていたらスクリプトのバグ。
+
+「混在スタイルのテキスト」の節も同じ扱いをする。1つのテキストレイヤー内で部分的にウェイトや色が違う場合、表に出ている値は**既定スタイルの代表値でしかない**。そのまま単一の値として実装すると、違いが静かに消える。要素を分割するか、該当箇所を個別に確認する。
 
 Dev Mode MCP が使える環境なら、コード生成の足場として併用してよい。ただし**確定値は必ず `nodes.json` を正とする**。MCP の生成物には `opentypeFlags`（palt の有無）が出てこないうえ、Tailwind への丸めが入る。
 
@@ -58,6 +67,12 @@ Dev Mode MCP が使える環境なら、コード生成の足場として併用�
 - **表に無い値を推測で埋めない。**`defaults.md` に無ければ Phase 3 のレポートに出す
 
 ## Phase 3: 検証
+
+**検証したいプロジェクトのルートに playwright が必要。**未導入なら先に入れる。
+
+```bash
+npm i -D playwright && npx playwright install chromium
+```
 
 ```bash
 node ~/.claude/skills/figma-impl/scripts/verify.js --url <実装したページのURL>
@@ -103,6 +118,7 @@ node ~/.claude/skills/figma-impl/scripts/verify.js --url <実装したページ�
 - **`.figma-impl/` が無い状態で実装に進まない**（ハードストップ）
 - **`fetch-node.js` を通さずに Figma のスクリーンショットやコピペから値を読み取らない**
 - **`nodes.json` の `null` を埋めるようスクリプトを書き換えない。**null は仕様
+- **混在スタイルのテキストを、既定スタイルの値で単一に実装しない**
 - **スクリーンショットのピクセル差分で検証しない。**アンチエイリアスのノイズが支配的で、差分から原因への逆写像が無い
 - **`UNRESOLVED.md` をデザイナーへの事前質問リストにしない**
 - **閾値を 0 にしない**

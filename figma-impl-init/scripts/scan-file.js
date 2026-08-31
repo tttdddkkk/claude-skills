@@ -9,7 +9,21 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { parseFigmaUrl, getFile, walk, FRAME_TYPES } = require('../../figma-impl/scripts/figma-api');
+// figma-impl スキルの共有モジュールを使う。2つのスキルは対で導入する前提。
+// 片方だけコピーすると、ここで MODULE_NOT_FOUND になる。
+let api;
+try {
+  api = require('../../figma-impl/scripts/figma-api');
+} catch (e) {
+  if (e.code !== 'MODULE_NOT_FOUND') throw e;
+  console.error(
+    'figma-impl/scripts/figma-api.js が見つかりません。\n' +
+      'figma-impl-init は figma-impl と対で使います。figma-impl スキルを\n' +
+      'figma-impl-init と同じ親ディレクトリに置いてください。'
+  );
+  process.exit(1);
+}
+const { parseFigmaUrl, getFile, walk, FRAME_TYPES } = api;
 
 const OUT = path.join(process.cwd(), '.figma-impl', 'scan-report.md');
 

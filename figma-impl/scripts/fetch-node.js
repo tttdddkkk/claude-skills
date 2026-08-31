@@ -55,6 +55,18 @@ function toMarkdown(result) {
       L.push(`| \`${m.id}\` | ${m.name ?? ''} | ${m.fields.join(', ')} |`);
     }
   }
+  L.push(`\n## 混在スタイルのテキスト\n`);
+  if (result.mixedStyle.length === 0) {
+    L.push('なし。');
+  } else {
+    L.push('1つのテキストレイヤー内で部分的にスタイルが違う。**上の表に出ている値は既定スタイルの代表値でしかない。**');
+    L.push('そのまま単一の値として実装しない。分割するか、該当箇所を個別に確認する。\n');
+    L.push('| id | name | 混在している項目 |');
+    L.push('| --- | --- | --- |');
+    for (const m of result.mixedStyle) {
+      L.push(`| \`${m.id}\` | ${m.name ?? ''} | ${m.fields.join(', ')} |`);
+    }
+  }
   return L.join('\n') + '\n';
 }
 
@@ -76,6 +88,7 @@ async function main() {
   const texts = [];
   const frames = [];
   const missing = [];
+  const mixedStyle = [];
 
   for (const id of nodeIds) {
     const doc = res.nodes?.[id]?.document;
@@ -87,8 +100,14 @@ async function main() {
       if (node.type === 'TEXT') {
         const t = extractText(node);
         texts.push(t);
-        const nulls = nullPaths(t).filter((k) => k !== 'opentypeFlags');
+        const nulls = nullPaths(t).filter((k) => !['opentypeFlags', 'mixedProperties'].includes(k));
         if (nulls.length) missing.push({ id: t.id, name: t.name, fields: nulls });
+        // 混在スタイルは「値が取れている」ように見えて代表値でしかない。
+        // 欠損と同じ列に出して、実装が黙って1つの値を使うのを防ぐ。
+        if (t.styleMixed) {
+          const props = t.mixedProperties ? t.mixedProperties.join('/') : '不明';
+          mixedStyle.push({ id: t.id, name: t.name, fields: [`混在スタイル（${props}）`] });
+        }
       } else if (FRAME_TYPES.has(node.type)) {
         const fr = extractFrame(node);
         frames.push(fr);
@@ -98,12 +117,12 @@ async function main() {
     });
   }
 
-  const result = { fileKey: parsed.fileKey, nodeIds, fetchedAt: new Date().toISOString(), texts, frames, missing };
+  const result = { fileKey: parsed.fileKey, nodeIds, fetchedAt: new Date().toISOString(), texts, frames, missing, mixedStyle };
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'nodes.json'), JSON.stringify(result, null, 2));
   fs.writeFileSync(path.join(OUT_DIR, 'nodes.md'), toMarkdown(result));
 
-  console.log(`テキスト ${texts.length} / フレーム ${frames.length} / 欠損 ${missing.length} 件`);
+  console.log(`テキスト ${texts.length} / フレーム ${frames.length} / 欠損 ${missing.length} 件 / 混在スタイル ${mixedStyle.length} 件`);
   console.log(`→ ${path.join(OUT_DIR, 'nodes.json')}`);
   console.log(`→ ${path.join(OUT_DIR, 'nodes.md')}`);
 }

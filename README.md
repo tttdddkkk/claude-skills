@@ -59,7 +59,9 @@ Figma からの実装で、Figma 通りにならない問題に対処する2ス�
 
 ## 動作環境
 
-`pdf-booklet` の実行には以下が必要:
+大半のスキルは Claude Code 単体で動く。外部依存があるのは以下。
+
+### `pdf-booklet` / `pdf-booklet-template-designer`
 
 ```bash
 pip install markdown beautifulsoup4 playwright
@@ -71,6 +73,14 @@ brew install poppler   # pdftoppm / pdfunite
 
 poppler が無い環境では、表紙のノンブル除外が機能せず警告を出して全ページに入った状態で出力される。
 
+### `figma-impl-init` / `figma-impl`
+
+Node.js と、Figma の個人アクセストークン（環境変数 `FIGMA_TOKEN`）。検証スクリプトを使う場合は、検証対象のプロジェクト側に playwright が必要。
+
+```bash
+npm i -D playwright && npx playwright install chromium
+```
+
 ## インストール
 
 ```bash
@@ -78,6 +88,8 @@ git clone https://github.com/tttdddkkk/claude-skills.git ~/.claude/skills
 ```
 
 既に `~/.claude/skills` がある場合は、必要なスキルのディレクトリだけをコピーする。
+
+ただし `figma-impl-init` と `figma-impl` は**対でコピーする**。前者のスクリプトが後者の共有モジュール（`figma-impl/scripts/figma-api.js`）を参照しているため、片方だけでは動かない。
 
 ## 使い方
 

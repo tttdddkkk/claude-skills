@@ -46,8 +46,28 @@ function walk(node, fn, parentId = null) {
 // 値が無いことを null で表す。undefined と 0 を区別する。
 const pick = (obj, key) => (obj && obj[key] !== undefined ? obj[key] : null);
 
+// 1つのテキストレイヤー内で部分的にスタイルが違う場合、Figma は
+// characterStyleOverrides（文字位置ごとのインデックス）と styleOverrideTable を返す。
+// これを見ないと node.style（既定スタイル）だけを読むことになり、
+// 部分的に違う実際の値が「全体の代表値」として静かに報告される。
+// それは「読み取りと生成を混ぜない」という前提を、この経路だけ壊す。
+// ※ REST API の当該フィールドの挙動は実ファイルで未検証。
+function mixedStyleInfo(node) {
+  const overrides = node.characterStyleOverrides;
+  if (!Array.isArray(overrides) || !overrides.some((v) => v !== 0)) {
+    return { styleMixed: false, mixedProperties: null };
+  }
+  const props = new Set();
+  for (const [key, style] of Object.entries(node.styleOverrideTable || {})) {
+    if (key === '0') continue;
+    for (const p of Object.keys(style || {})) props.add(p);
+  }
+  return { styleMixed: true, mixedProperties: props.size ? [...props].sort() : null };
+}
+
 function extractText(node) {
   const s = node.style || null;
+  const mixed = mixedStyleInfo(node);
   return {
     id: node.id,
     name: node.name ?? null,
@@ -69,6 +89,9 @@ function extractText(node) {
     palt: s && s.opentypeFlags ? (s.opentypeFlags.PALT ?? 0) : null,
     fills: node.fills ?? null,
     absoluteBoundingBox: node.absoluteBoundingBox ?? null,
+    // 混在している場合、上の各フィールドは既定スタイルの値でしかない。
+    // 代表値として扱わず、人が確認する対象として扱う。
+    ...mixed,
   };
 }
 
@@ -93,4 +116,4 @@ function extractFrame(node) {
 
 const FRAME_TYPES = new Set(['FRAME', 'GROUP', 'COMPONENT', 'COMPONENT_SET', 'INSTANCE', 'SECTION']);
 
-module.exports = { parseFigmaUrl, getNodes, getFile, walk, extractText, extractFrame, FRAME_TYPES };
+module.exports = { parseFigmaUrl, getNodes, getFile, walk, extractText, extractFrame, mixedStyleInfo, FRAME_TYPES };
