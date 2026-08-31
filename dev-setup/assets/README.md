@@ -24,5 +24,7 @@ Node バージョン、既存の scripts 名、フレームワーク）を反映
 
 - `.node-version` — `node -v` で確認した値、または合意した LTS を1行。
   `ci.yml` が `node-version-file` で参照するので、**CI を入れるなら必須**。
+- `CODEOWNERS` — レビュー担当が固定されている場合のみ。中身がプロジェクト依存のため雛形なし。
+  書式は `references/catalog.md` を参照。
 - `package.json` の `scripts`（`format` / `lint` / `typecheck` / `test`）—
   `ci.yml` と検証手順がこれを前提にする。定義しない script はワークフローからも消す。
