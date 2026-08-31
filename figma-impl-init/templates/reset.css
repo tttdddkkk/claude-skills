@@ -1,0 +1,26 @@
+/* figma-impl-init が生成。グローバルに1回だけ効かせる。
+   palt の値は scan-report.md の実測に従い、以後変更しない。 */
+
+:root {
+  /* Figma のフォント名をそのまま。和文を明記する（欧文名だけだと和文が OS 依存のフォントに落ちる） */
+  --font-sans: "<Figmaのフォント>", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+
+  /* scan-report.md の palt 判定を転記する。1 か 0 を書き、以後変えない */
+  font-feature-settings: "palt" 1;
+
+  /* 合成太字・合成斜体を禁止する。該当ウェイトが無いことに気づけるようにする */
+  font-synthesis: none;
+
+  /* normal に落ちるのを防ぐ。normal は 0 ではなくフォント固有のカーニング */
+  letter-spacing: 0em;
+}
+
+/* letter-spacing は継承されないプロパティではないが、
+   コンポーネントライブラリが normal を再指定してくるのを打ち消す */
+* {
+  letter-spacing: inherit;
+}
