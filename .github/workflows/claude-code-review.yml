@@ -36,11 +36,24 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            この Pull Request の変更内容をレビューしてください。
+            PR ブランチは現在の作業ディレクトリにチェックアウト済みです。
+
+            レビュー方針・評価レベル(🔴 CRITICAL / 🟡 WARNING / 🔵 INFO)・
+            マージ判定・指摘しない対象は、CLAUDE.md の「レビュー方針」に従ってください。
+
+            指摘は mcp__github_inline_comment__create_inline_comment で該当行に
+            インラインコメントとして投稿してください。各コメントの本文は先頭に
+            評価レベルのラベルを置いてください。ラベルを付けられない指摘は投稿しないでください。
+
+            サマリーコメントは投稿不要です。集計と判定は後続のワークフローステップが行います。
           claude_args: >-
-            --allowedTools "Skill,Read,Grep,Glob,LS,Bash(git diff:*),Bash(git log:*),Bash(gh pr diff:*),Bash(gh pr view:*),mcp__github_inline_comment__create_inline_comment"
+            --allowedTools "Read,Grep,Glob,LS,Bash(git diff:*),Bash(git log:*),Bash(gh pr diff:*),Bash(gh pr view:*),mcp__github_inline_comment__create_inline_comment"
             --append-system-prompt "レビューコメントとサマリーはすべて日本語で書いてください。"
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
