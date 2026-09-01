@@ -45,6 +45,31 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
 
+      - name: 実行ログをアーティファクトに保存
+        if: always()
+        env:
+          EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
+          CONCLUSION: ${{ steps.claude-review.outputs.conclusion }}
+        run: |
+          # outputs が空かどうかは、レビューが実際に走ったかの判定条件の候補。
+          # 実測値を残すために、値そのものをログに出す。
+          echo "conclusion=[${CONCLUSION}]"
+          echo "execution_file=[${EXECUTION_FILE}]"
+
+          if [ -n "$EXECUTION_FILE" ] && [ -f "$EXECUTION_FILE" ]; then
+            cp "$EXECUTION_FILE" claude-execution-output.json
+          else
+            echo '{"note":"execution_file is empty or missing"}' > claude-execution-output.json
+          fi
+
+      - name: 実行ログをアップロード
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-execution-output-${{ github.event.pull_request.number }}
+          path: claude-execution-output.json
+          retention-days: 7
+
       - name: レビュー結果を集計して判定を投稿
         if: always()
         env:
