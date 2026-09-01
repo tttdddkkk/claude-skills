@@ -53,7 +53,7 @@ jobs:
 
             サマリーコメントは投稿不要です。集計と判定は後続のワークフローステップが行います。
           claude_args: >-
-            --allowedTools "Read,Grep,Glob,LS,Bash(git diff:*),Bash(git log:*),Bash(gh pr diff:*),Bash(gh pr view:*),mcp__github_inline_comment__create_inline_comment"
+            --allowedTools "Read,Grep,Glob,LS,Bash(gh pr diff:*),Bash(gh pr view:*),mcp__github_inline_comment__create_inline_comment"
             --append-system-prompt "レビューコメントとサマリーはすべて日本語で書いてください。"
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
@@ -90,6 +90,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           OUTCOME: ${{ steps.claude-review.outcome }}
+          EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -uo pipefail
@@ -107,8 +108,21 @@ jobs:
           INFO=$(count INFO)
           UNLABELED=$(count UNLABELED)
 
+          # レビューが実際に走ったかは outcome では判定できない。ワークフローファイルが
+          # default branch と不一致だと claude-code-action は警告を出して exit 0 するため、
+          # outcome は success のままになる。実行された場合のみ outputs が埋まる。
+          DENIALS=$(jq -r '[.[]? | select(.type == "result") | .permission_denials_count] | last // 0' \
+            claude-execution-output.json 2>/dev/null || echo 0)
+
+          # レビューが走らなかった場合、件数はすべて0になるが「指摘0件」を意味しない。
+          # 誤読を避けるため、その場合は集計表と内訳の案内を出さない。
+          REVIEWED=true
           if [ "$OUTCOME" != "success" ]; then
-            VERDICT="⚠️ レビューが正常終了しませんでした(ステップの結果: \`$OUTCOME\`)。判定は行えません。"
+            REVIEWED=false
+            VERDICT="⚠️ **判定不能** — レビューステップが正常終了しませんでした(ステップの結果: \`$OUTCOME\`)。"
+          elif [ -z "$EXECUTION_FILE" ]; then
+            REVIEWED=false
+            VERDICT="⚠️ **判定不能** — レビューが実行されていません。ワークフローファイルが default branch と一致しない PR は workflow validation でスキップされます。ワークフローを変更した PR か、変更前に切られたブランチの場合は main に追従させてください。"
           elif [ "$CRITICAL" -gt 0 ]; then
             VERDICT="❌ **マージ要件を満たしていません** — CRITICAL が ${CRITICAL} 件あります。"
           else
@@ -119,18 +133,28 @@ jobs:
             echo "## Claude Code Review"
             echo
             echo "$VERDICT"
-            echo
-            echo "| レベル | 件数 |"
-            echo "| --- | --- |"
-            echo "| 🔴 CRITICAL | ${CRITICAL} |"
-            echo "| 🟡 WARNING | ${WARNING} |"
-            echo "| 🔵 INFO | ${INFO} |"
-            if [ "$UNLABELED" -gt 0 ]; then
-              echo "| ラベルなし | ${UNLABELED} |"
+
+            if [ "$REVIEWED" = true ]; then
+              echo
+              echo "| レベル | 件数 |"
+              echo "| --- | --- |"
+              echo "| 🔴 CRITICAL | ${CRITICAL} |"
+              echo "| 🟡 WARNING | ${WARNING} |"
+              echo "| 🔵 INFO | ${INFO} |"
+              if [ "$UNLABELED" -gt 0 ]; then
+                echo "| ラベルなし | ${UNLABELED} |"
+              fi
+
+              if [ "$DENIALS" -gt 0 ]; then
+                echo
+                echo "> ⚠️ レビュー中に ${DENIALS} 件の権限拒否が発生しました。許可ツールの設定が不足している可能性があり、"
+                echo "> 上記の件数は実際の指摘数より少ない可能性があります。実行ログのアーティファクトを確認してください。"
+              fi
+
+              echo
+              echo "内訳は各インラインコメントを参照。"
             fi
-            echo
-            echo "内訳は各インラインコメントを参照。このコメント自体は指摘の有無にかかわらず投稿されるため、"
-            echo "本コメントが無い場合はワークフローが発火していない。"
+
             echo
             echo "[実行ログ]($RUN_URL)"
           } > body.md
