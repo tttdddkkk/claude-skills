@@ -114,9 +114,14 @@ jobs:
           DENIALS=$(jq -r '[.[]? | select(.type == "result") | .permission_denials_count] | last // 0' \
             claude-execution-output.json 2>/dev/null || echo 0)
 
+          # レビューが走らなかった場合、件数はすべて0になるが「指摘0件」を意味しない。
+          # 誤読を避けるため、その場合は集計表と内訳の案内を出さない。
+          REVIEWED=true
           if [ "$OUTCOME" != "success" ]; then
-            VERDICT="⚠️ レビューが正常終了しませんでした(ステップの結果: \`$OUTCOME\`)。判定は行えません。"
+            REVIEWED=false
+            VERDICT="⚠️ **判定不能** — レビューステップが正常終了しませんでした(ステップの結果: \`$OUTCOME\`)。"
           elif [ -z "$EXECUTION_FILE" ]; then
+            REVIEWED=false
             VERDICT="⚠️ **判定不能** — レビューが実行されていません。ワークフローファイルが default branch と一致しない PR は workflow validation でスキップされます。ワークフローを変更した PR か、変更前に切られたブランチの場合は main に追従させてください。"
           elif [ "$CRITICAL" -gt 0 ]; then
             VERDICT="❌ **マージ要件を満たしていません** — CRITICAL が ${CRITICAL} 件あります。"
@@ -128,23 +133,28 @@ jobs:
             echo "## Claude Code Review"
             echo
             echo "$VERDICT"
-            echo
-            echo "| レベル | 件数 |"
-            echo "| --- | --- |"
-            echo "| 🔴 CRITICAL | ${CRITICAL} |"
-            echo "| 🟡 WARNING | ${WARNING} |"
-            echo "| 🔵 INFO | ${INFO} |"
-            if [ "$UNLABELED" -gt 0 ]; then
-              echo "| ラベルなし | ${UNLABELED} |"
-            fi
-            echo
-            if [ "$DENIALS" -gt 0 ]; then
+
+            if [ "$REVIEWED" = true ]; then
               echo
-              echo "> ⚠️ レビュー中に ${DENIALS} 件の権限拒否が発生しました。許可ツールの設定が不足している可能性があり、"
-              echo "> 上記の件数は実際の指摘数より少ない可能性があります。実行ログのアーティファクトを確認してください。"
+              echo "| レベル | 件数 |"
+              echo "| --- | --- |"
+              echo "| 🔴 CRITICAL | ${CRITICAL} |"
+              echo "| 🟡 WARNING | ${WARNING} |"
+              echo "| 🔵 INFO | ${INFO} |"
+              if [ "$UNLABELED" -gt 0 ]; then
+                echo "| ラベルなし | ${UNLABELED} |"
+              fi
+
+              if [ "$DENIALS" -gt 0 ]; then
+                echo
+                echo "> ⚠️ レビュー中に ${DENIALS} 件の権限拒否が発生しました。許可ツールの設定が不足している可能性があり、"
+                echo "> 上記の件数は実際の指摘数より少ない可能性があります。実行ログのアーティファクトを確認してください。"
+              fi
+
+              echo
+              echo "内訳は各インラインコメントを参照。"
             fi
-            echo
-            echo "内訳は各インラインコメントを参照。このコメントは指摘の有無にかかわらず投稿される。"
+
             echo
             echo "[実行ログ]($RUN_URL)"
           } > body.md
