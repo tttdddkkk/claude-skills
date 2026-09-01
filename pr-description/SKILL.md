@@ -14,17 +14,19 @@ PR の作成・更新コマンドは実行しない。
 
 ```bash
 gh pr view --json baseRefName,title,body 2>/dev/null   # 既存PRがあればベースと現行本文を取得
-git symbolic-ref --short refs/remotes/origin/HEAD      # 無ければリモートのデフォルトブランチ名
+git symbolic-ref --short refs/remotes/origin/HEAD      # 無ければリモートのデフォルトブランチ(例: origin/main)
 ```
+
+以降 `<base>` はリモート参照(`origin/main` など)を指す。`gh pr view` の `baseRefName` は `main` のようにリモート名を含まないため、`origin/` を補う。
 
 どちらも取れない場合は、ベースブランチをユーザーに聞く。推測で `main` や `master` を使わない。`git merge-base --fork-point` は upstream の reflog に依存し、fresh clone では失敗するか誤った起点を返すため使わない。
 
 差分は次の3つを併用する。
 
 ```bash
-git diff origin/<base>...HEAD --stat   # コミット済みの変更
-git diff origin/<base> --stat          # 作業ツリーとの比較。未コミットの変更を含む
-git status --short                     # 未追跡ファイル。上の2つには現れない
+git diff <base>...HEAD --stat   # コミット済みの変更
+git diff <base> --stat          # 作業ツリーとの比較。未コミットの変更を含む
+git status --short              # 未追跡ファイル。上の2つには現れない
 ```
 
 三点記法(`...`)はコミット間の比較であり、**未コミットの変更を含まない**。コミット前に本文を作る場合、三点記法だけでは差分が空になる。
