@@ -151,6 +151,16 @@ Q4=不要 なら CI は入れない。ただし理由は一度確認する。「
 テンプレートをそのままコピーするのではなく、検出した内容（パッケージマネージャ、Node バージョン、
 既存 scripts 名）を反映させること。
 
+**comment-lint を入れる場合**（決定表で△以上）は、次の3点をセットで行う。1つでも欠けると動かない。
+
+1. `assets/comment-lint.mjs` を `scripts/comment-lint.mjs` として配置する（依存の追加は不要）
+2. `assets/lefthook.yml` の `comment-lint` job を残す（lefthook を入れない方針なら削る）
+3. `assets/github/workflows/ci.yml` の `comment-lint` job を残す（CI を入れない方針なら削る）
+
+`comment-lint.config.json` は**既定で作らない**。`assets/comment-lint.config.json` は
+重大度を引き上げる場合の記入例で、そのまま置くと `no-speculation` と `todo-requires-ticket` が
+error になる。既存コードで `node scripts/comment-lint.mjs --all` を走らせ、件数を見てから決める。
+
 **ファイルを置くだけでは動かない。次の3つを行う。(a) と (b) は必須、(c) は確認と提案のみ。**
 
 **(a) `package.json` の scripts を定義する**
@@ -238,6 +248,9 @@ CI の書き方は `references/ci-recipes.md` を読む。
   と出る）。ただし上記のビルド遮断が起きていると登録もされない。brew 等で入れた場合や、
   登録が確認できない場合は `lefthook install` を明示的に実行する。
   登録後、実際に対象ファイルを変更してコミットし、フォーマットが走ることを確認する。
+- **comment-lint を入れた場合は `--all` で現状を確認する。** 既定は差分のみを見るので
+  導入直後は静かだが、既存コードの状態を把握せずに重大度を引き上げると後で詰まる。
+  error が多いルールは `comment-lint.config.json` で warning か off に落とす。
 - **型チェックが大量にエラーを吐く場合**：`noUncheckedIndexedAccess` や
   `exactOptionalPropertyTypes` は既存コードで数百件出ることがある。まず `strict: true` だけで
   通し、追加オプションは1つずつ有効にして件数を見る。通らなかったオプションは無理に残さず外し、
