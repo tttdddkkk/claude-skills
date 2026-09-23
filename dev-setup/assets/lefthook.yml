@@ -12,6 +12,13 @@ pre-commit:
       run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
+    # コメントの内容を検査する。自分でステージ済み差分を読むので {staged_files} は渡さない
+    # （glob だけで発火条件を絞る）。error が1件でもあるとコミットが止まる。
+    # 重大度は comment-lint.config.json で調整する。
+    - name: comment-lint
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,vue,svelte,css,scss}"   # スクリプトの既定 targetExtensions と揃える
+      run: node scripts/comment-lint.mjs
+
 # pull / マージのあと、lockfile が変わったときだけ依存を同期する。
 # 無条件に走らせるとブランチ切替が遅くなり、hook ごと無効化されるので条件を外さない。
 # files の実行結果が空なら job はスキップされる、という lefthook の仕様を使っている。

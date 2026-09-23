@@ -151,6 +151,22 @@ Q4=不要 なら CI は入れない。ただし理由は一度確認する。「
 テンプレートをそのままコピーするのではなく、検出した内容（パッケージマネージャ、Node バージョン、
 既存 scripts 名）を反映させること。
 
+**comment-lint を入れる場合**（決定表で△以上）は、次の3点をセットで行う。1つでも欠けると動かない。
+
+1. **`comment-review` スキルの `scripts/comment-lint.mjs`** を、対象リポジトリの
+   `scripts/comment-lint.mjs` にコピーする（依存の追加は不要）。
+   このスキルは雛形を持たない。実体を2箇所に置くと更新が片方に入らないため
+2. `assets/lefthook.yml` の `comment-lint` job を残す（lefthook を入れない方針なら削る）
+3. `assets/github/workflows/ci.yml` の `comment-lint` job を残す（CI を入れない方針なら削る）
+
+`comment-review` が導入されていない環境では 1 ができない。その場合は
+comment-lint を見送り、§6 に「見送った理由」として記録する。
+
+`comment-lint.config.json` は**既定で作らない**（無くても既定値で動く）。
+重大度を引き上げるときだけ置く。判断の前に、既存コードで
+`node scripts/comment-lint.mjs --all` を走らせて件数を見る。
+設定キーとルール一覧は `comment-review/references/lint-rules.md`。
+
 **ファイルを置くだけでは動かない。次の3つを行う。(a) と (b) は必須、(c) は確認と提案のみ。**
 
 **(a) `package.json` の scripts を定義する**
@@ -238,6 +254,9 @@ CI の書き方は `references/ci-recipes.md` を読む。
   と出る）。ただし上記のビルド遮断が起きていると登録もされない。brew 等で入れた場合や、
   登録が確認できない場合は `lefthook install` を明示的に実行する。
   登録後、実際に対象ファイルを変更してコミットし、フォーマットが走ることを確認する。
+- **comment-lint を入れた場合は `--all` で現状を確認する。** 既定は差分のみを見るので
+  導入直後は静かだが、既存コードの状態を把握せずに重大度を引き上げると後で詰まる。
+  error が多いルールは `comment-lint.config.json` で warning か off に落とす。
 - **型チェックが大量にエラーを吐く場合**：`noUncheckedIndexedAccess` や
   `exactOptionalPropertyTypes` は既存コードで数百件出ることがある。まず `strict: true` だけで
   通し、追加オプションは1つずつ有効にして件数を見る。通らなかったオプションは無理に残さず外し、

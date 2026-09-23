@@ -23,6 +23,7 @@ Q3（厳格度）が縦軸。◎=必ず入れる / ○=入れる / △=提案の
 | `tsconfig` strict | ○ | ◎ | ◎ |
 | CI（lint / typecheck / test） | − | ◎ | ◎ |
 | Git hooks（pre-commit） | − | △ | ◎ |
+| コメントlint（comment-lint） | − | △ | ◎ |
 | 依存同期 hook（post-merge） | − | ○ | ◎ |
 | 依存自動更新（Renovate / Dependabot） | − | △ | ◎ |
 | 更新 PR の automerge | − | − | △ |
@@ -73,6 +74,32 @@ Windows/macOS 混在チームや、CI とローカルで差分が出る場合に
 - `package.json` の `engines` と `packageManager`（Corepack が読む）
 - `.node-version` または `.nvmrc`（`mise` / `nvm` / `fnm` が読む）
 - CI の `setup-node` は `node-version-file` でこれらを参照させる（**バージョンを二重に書かない**）
+
+### コメントlint（comment-lint）
+コメントの**内容**を検査する。フォーマッターやリンターはコメントの中身を見ないので、
+役割が重ならない。狙いは AI がコメントを根拠として読むことを前提にした品質担保で、
+推測・感想・陳腐化する情報・根拠のない主張を、コードに残る前に弾く。
+
+正規表現で確定判定できるものだけを扱う。意味的な妥当性（このコメントは実装と一致しているか）は
+検査できないので、そこはレビュー側の担当として残る。
+
+実体は `comment-review` スキルが持つ（`comment-review/scripts/comment-lint.mjs`）。
+このスキルは雛形を持たず、そこからコピーする。既定の重大度はスクリプト内にあり、
+導入先リポジトリ直下の `comment-lint.config.json` で上書きする。
+**正当なコメントにも一致することが確認されている4ルール（`no-speculation` /
+`todo-requires-ticket` / `no-volatile-metadata` / `no-line-number-reference`）は既定が warning。**
+チケット運用や表記規約が固まっているプロジェクトでのみ error に引き上げる。
+引き上げる前に必ず `--all` で件数を見ること（§原則5）。
+
+実行箇所は pre-commit と CI の両方。CI 側は `--base <sha>` で PR 差分だけを対象にする。
+`--all` を CI に入れると既存コードの指摘が一度に出て、ジョブごと無視される。
+
+検査対象から外すパスは `ignorePaths` で指定する。既定で lint 自身とフィクスチャを除外する
+（lint のソースはルール文字列を含むため、除外しないと自分自身を検出する）。
+
+ルール一覧・設定キー・機械判定の限界は `comment-review/references/lint-rules.md`。
+
+Node 標準モジュールだけで動くので依存の追加は不要。配置先は `scripts/comment-lint.mjs`。
 
 ### Git hooks
 `lefthook` を推奨（単一バイナリ、YAML設定、並列実行、Node 非依存）。
