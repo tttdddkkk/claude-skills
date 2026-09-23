@@ -14,8 +14,6 @@ Node バージョン、既存の scripts 名、フレームワーク）を反映
 | `biome.json` | `biome.json` |
 | `lefthook.yml` | `lefthook.yml` |
 | `tsconfig.strict.json` | `tsconfig.json` にマージ |
-| `comment-lint.mjs` | `scripts/comment-lint.mjs` |
-| `comment-lint.config.json` | `comment-lint.config.json`（既定では置かない。重大度を変える場合のみ） |
 | `renovate.json` | `.github/renovate.json` |
 | `github/workflows/ci.yml` | `.github/workflows/ci.yml` |
 | `github/pull_request_template.md` | `.github/pull_request_template.md` |
@@ -26,6 +24,9 @@ Node バージョン、既存の scripts 名、フレームワーク）を反映
 
 - `.node-version` — `node -v` で確認した値、または合意した LTS を1行。
   `ci.yml` が `node-version-file` で参照するので、**CI を入れるなら必須**。
+- `scripts/comment-lint.mjs` — **`comment-review` スキルが持つ**。ここには雛形を置かない
+  （実体を2箇所に持つと更新が片方に入らない）。`comment-review/scripts/comment-lint.mjs` を
+  コピーする。`assets/lefthook.yml` と `assets/github/workflows/ci.yml` はこのパスを前提にしている。
 - `CODEOWNERS` — レビュー担当が固定されている場合のみ。中身がプロジェクト依存のため雛形なし。
   書式は `references/catalog.md` を参照。
 - `package.json` の `scripts`（`format` / `lint` / `typecheck` / `test`）—

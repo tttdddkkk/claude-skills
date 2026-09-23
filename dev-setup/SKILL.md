@@ -153,13 +153,19 @@ Q4=不要 なら CI は入れない。ただし理由は一度確認する。「
 
 **comment-lint を入れる場合**（決定表で△以上）は、次の3点をセットで行う。1つでも欠けると動かない。
 
-1. `assets/comment-lint.mjs` を `scripts/comment-lint.mjs` として配置する（依存の追加は不要）
+1. **`comment-review` スキルの `scripts/comment-lint.mjs`** を、対象リポジトリの
+   `scripts/comment-lint.mjs` にコピーする（依存の追加は不要）。
+   このスキルは雛形を持たない。実体を2箇所に置くと更新が片方に入らないため
 2. `assets/lefthook.yml` の `comment-lint` job を残す（lefthook を入れない方針なら削る）
 3. `assets/github/workflows/ci.yml` の `comment-lint` job を残す（CI を入れない方針なら削る）
 
-`comment-lint.config.json` は**既定で作らない**。`assets/comment-lint.config.json` は
-重大度を引き上げる場合の記入例で、そのまま置くと `no-speculation` と `todo-requires-ticket` が
-error になる。既存コードで `node scripts/comment-lint.mjs --all` を走らせ、件数を見てから決める。
+`comment-review` が導入されていない環境では 1 ができない。その場合は
+comment-lint を見送り、§6 に「見送った理由」として記録する。
+
+`comment-lint.config.json` は**既定で作らない**（無くても既定値で動く）。
+重大度を引き上げるときだけ置く。判断の前に、既存コードで
+`node scripts/comment-lint.mjs --all` を走らせて件数を見る。
+設定キーとルール一覧は `comment-review/references/lint-rules.md`。
 
 **ファイルを置くだけでは動かない。次の3つを行う。(a) と (b) は必須、(c) は確認と提案のみ。**
 

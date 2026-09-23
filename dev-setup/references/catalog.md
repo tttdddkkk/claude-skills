@@ -83,7 +83,9 @@ Windows/macOS 混在チームや、CI とローカルで差分が出る場合に
 正規表現で確定判定できるものだけを扱う。意味的な妥当性（このコメントは実装と一致しているか）は
 検査できないので、そこはレビュー側の担当として残る。
 
-既定の重大度は `assets/comment-lint.mjs` に書いてあり、`comment-lint.config.json` で上書きする。
+実体は `comment-review` スキルが持つ（`comment-review/scripts/comment-lint.mjs`）。
+このスキルは雛形を持たず、そこからコピーする。既定の重大度はスクリプト内にあり、
+導入先リポジトリ直下の `comment-lint.config.json` で上書きする。
 **正当なコメントにも一致することが確認されている4ルール（`no-speculation` /
 `todo-requires-ticket` / `no-volatile-metadata` / `no-line-number-reference`）は既定が warning。**
 チケット運用や表記規約が固まっているプロジェクトでのみ error に引き上げる。
@@ -94,6 +96,8 @@ Windows/macOS 混在チームや、CI とローカルで差分が出る場合に
 
 検査対象から外すパスは `ignorePaths` で指定する。既定で lint 自身とフィクスチャを除外する
 （lint のソースはルール文字列を含むため、除外しないと自分自身を検出する）。
+
+ルール一覧・設定キー・機械判定の限界は `comment-review/references/lint-rules.md`。
 
 Node 標準モジュールだけで動くので依存の追加は不要。配置先は `scripts/comment-lint.mjs`。
 

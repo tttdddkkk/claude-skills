@@ -15,6 +15,7 @@
  *   node scripts/comment-lint.mjs --all            # 追跡中の全ファイルを検査
  *   node scripts/comment-lint.mjs --base <ref>     # <ref> からの差分を検査（CI向け）
  *   node scripts/comment-lint.mjs --json           # JSON出力
+ *   node scripts/comment-lint.mjs --all --include-fixtures   # ルール変更時の回帰確認
  *
  * 終了コード:
  *   0 = error なし（warning はあってもよい）
@@ -101,6 +102,8 @@ try {
   fail(`ticketPattern が正規表現として不正です: ${e.message}`);
 }
 
+const FIXTURE_PATH = /__fixtures__\//;
+
 const IGNORE_PATHS = config.ignorePaths.map((p) => {
   try {
     return new RegExp(p);
@@ -109,7 +112,7 @@ const IGNORE_PATHS = config.ignorePaths.map((p) => {
   }
 });
 
-const isIgnored = (file) => IGNORE_PATHS.some((re) => re.test(file));
+const isIgnored = (file) => !(includeFixtures && FIXTURE_PATH.test(file)) && IGNORE_PATHS.some((re) => re.test(file));
 
 /** 引用として認める記法 */
 const CITATION = {
@@ -284,6 +287,8 @@ const symbolSeverity = config.rules[SYMBOL_RULE] ?? 'error';
 const argv = process.argv.slice(2);
 const asJson = argv.includes('--json');
 const scanAll = argv.includes('--all');
+/** フィクスチャは既定で ignorePaths により除外される。回帰確認のときだけ戻す */
+const includeFixtures = argv.includes('--include-fixtures');
 
 /** --base <ref> / --base=<ref> */
 const baseRef = (() => {
