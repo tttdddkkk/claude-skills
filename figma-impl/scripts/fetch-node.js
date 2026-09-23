@@ -120,7 +120,11 @@ async function main() {
     });
   }
 
-  const result = { fileKey: parsed.fileKey, nodeIds, fetchedAt: new Date().toISOString(), texts, frames, missing, mixedStyle };
+  // version / lastModified は検証レポートに載せ、どの版の Figma と突き合わせたかを残す。
+  const result = {
+    fileKey: parsed.fileKey, fileName: res.name ?? null, fileVersion: res.version ?? null, fileLastModified: res.lastModified ?? null,
+    nodeIds, fetchedAt: new Date().toISOString(), texts, frames, missing, mixedStyle,
+  };
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'nodes.json'), JSON.stringify(result, null, 2));
   fs.writeFileSync(path.join(OUT_DIR, 'nodes.md'), toMarkdown(result));

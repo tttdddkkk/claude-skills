@@ -97,6 +97,22 @@ node ~/.claude/skills/figma-impl/scripts/verify.js --url <実装したページ�
 
 ブラウザのコンソールで手早く見るなら `scripts/check-normal.js` を貼る。
 
+### 証跡を PR に残す
+
+**「一致しました」を AI の言葉で報告しない。**検証したかどうか自体を人が確かめられないため。差分が無くなったら、PR の最新コミットを push した状態で `--pr` を付けて実行し、スクリプトに直接投稿させる。
+
+```bash
+node ~/.claude/skills/figma-impl/scripts/verify.js --url <実装したページのURL> --pr <PR番号>
+```
+
+- レポートは毎回 `.figma-impl/evidence/<実行日時>/` に保存される（`--pr` 無しでも）。`--pr` を付けると同じ内容を PR にコメントする
+- レポートには、検証したコミット SHA、Figma ファイルの version、`nodes.json` のハッシュ、ブラウザのバージョン、**全要素**の Figma 値と実測値が載る
+- Figma の書き出し画像と実装のスクリーンショットを並べて載せる。画像は証跡専用ブランチ `figma-impl-evidence` に push し、コミット SHA 固定の URL で参照する。**画像は人が見るための参考で、判定には使わない**
+- 未コミットの変更がある、または手元の HEAD が PR の最新コミットと違う場合は投稿せずに止まる。証跡とコミットを一致させるため
+- `.figma-impl/tmp/` と `.figma-impl/evidence/` は `.gitignore` に入れる
+
+AI がすることは、投稿されたコメントの URL を伝えることだけ。**レポートを要約・転記して PR 本文や会話に「一致」と書かない。**
+
 ## 出力形式
 
 ### `UNRESOLVED.md`
@@ -124,3 +140,4 @@ node ~/.claude/skills/figma-impl/scripts/verify.js --url <実装したページ�
 - **スクリーンショットのピクセル差分で検証しない。**アンチエイリアスのノイズが支配的で、差分から原因への逆写像が無い
 - **`UNRESOLVED.md` をデザイナーへの事前質問リストにしない**
 - **閾値を 0 にしない**
+- **検証結果を AI が要約・転記して報告しない。**`verify.js --pr` の投稿だけを証跡とする

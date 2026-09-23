@@ -37,6 +37,19 @@ const getNodes = (fileKey, ids) =>
 const getFile = (fileKey, depth) =>
   call(`/files/${fileKey}${depth ? `?depth=${depth}` : ''}`);
 
+// Figma 側のレンダリング結果を PNG で書き出す。返るのは一時 URL なので、すぐにダウンロードする。
+async function getImages(fileKey, ids, scale = 2) {
+  const res = await call(`/images/${fileKey}?ids=${encodeURIComponent(ids.join(','))}&format=png&scale=${scale}`);
+  if (res.err) throw new Error(`Figma images API: ${res.err}`);
+  const out = {};
+  for (const [id, url] of Object.entries(res.images || {})) {
+    if (!url) continue;
+    const r = await fetch(url);
+    if (r.ok) out[id] = Buffer.from(await r.arrayBuffer());
+  }
+  return out;
+}
+
 // 深さ優先で全ノードを渡す。親を辿れるよう parentId を付ける。
 function walk(node, fn, parentId = null) {
   fn(node, parentId);
@@ -157,4 +170,4 @@ function extractFrame(node) {
 // ファイルの作りと無関係に水増しされる。子ノードは walk で辿るので取りこぼしはない。
 const FRAME_TYPES = new Set(['FRAME', 'COMPONENT', 'COMPONENT_SET', 'INSTANCE']);
 
-module.exports = { parseFigmaUrl, getNodes, getFile, walk, extractText, extractFrame, mixedStyleInfo, FRAME_TYPES };
+module.exports = { parseFigmaUrl, getNodes, getFile, getImages, walk, extractText, extractFrame, mixedStyleInfo, FRAME_TYPES };

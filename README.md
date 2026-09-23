@@ -96,7 +96,7 @@ Figma からの実装で、Figma 通りにならない問題に対処する2ス�
 - `figma-impl-init/scripts/scan-file.js` — Figma ファイル全体の実測（palt の割合、フォント、余白スケール、Auto Layout の使用率）
 - `figma-impl-init/templates/` — `conversion.md` / `defaults.md` / `reset.css` の草案
 - `figma-impl/scripts/fetch-node.js` — ノードの値を正規化して取得。欠損は `null` のまま残す
-- `figma-impl/scripts/verify.js` — Playwright で実測し、ズレた行だけを出力
+- `figma-impl/scripts/verify.js` — Playwright で実測し、ズレた行だけを出力。`--pr` で全要素の実測値と見比べ用の画像を PR にコメントする（証跡）
 
 ## 設計方針
 
@@ -140,6 +140,8 @@ Node.js 18 以降と、Figma の個人アクセストークン（環境変数 `F
 ```bash
 npm i -D playwright && npx playwright install chromium
 ```
+
+検証結果を PR に投稿する（`verify.js --pr`）場合は、`gh` と、対象リポジトリへの push 権限が必要（画像を証跡専用ブランチ `figma-impl-evidence` に push するため）。
 
 ## インストール
 
