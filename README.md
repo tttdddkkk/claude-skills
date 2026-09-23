@@ -83,6 +83,21 @@ AI はコメントを疑わずに読み、設計書や Figma より優先して�
 - `references/review-checklist.md` — 人間向けレビュー観点
 - `assets/agent-rules.md` — `CLAUDE.md` / `AGENTS.md` 貼り付け用の規約スニペット
 
+### `figma-impl-init` / `figma-impl`
+
+Figma からの実装で、Figma 通りにならない問題に対処する2スキル。初期化と実装を分けてある（実装スキルに初期化を混ぜると、毎回発火判定が走って判断が引きずられる）。
+
+問題を3つに分けて扱う。**A: Figma に存在しない情報**（hover、中間ブレークポイント、テキスト溢れ）は `figma-impl-init` で既定値を先に決めて固定する。**B: 存在するが CSS に直訳できない**（`line-height: AUTO`、`letter-spacing` の%指定、palt）は変換規則を1回決めて固定する。**C: 存在するが AI に届いていない**は、スクリプトで機械的に取得して解決する。
+
+要点は、**読み取りと生成を混ぜないこと**。混ぜると読めなかった箇所を生成側の推測が静かに埋め、出力を見ても「読んだ値」と「創作した値」が区別できなくなる。取得スクリプトは欠損を `null` のまま残し、その一覧がそのまま「AI が創作する場所」のリストになる。AI の自己申告は使わない（埋めた自覚が無いため機能しない）。
+
+検証にスクリーンショットのピクセル差分は使わない。Figma はテキストをブラウザに描かせておらず（自前レンダラ、ヒンティングなし）、アンチエイリアスのノイズが支配的で差分から原因への逆写像が無いため。代わりに `getComputedStyle` と `Range.getClientRects` の実測値を突き合わせる。
+
+- `figma-impl-init/scripts/scan-file.js` — Figma ファイル全体の実測（palt の割合、フォント、余白スケール、Auto Layout の使用率）
+- `figma-impl-init/templates/` — `conversion.md` / `defaults.md` / `reset.css` の草案
+- `figma-impl/scripts/fetch-node.js` — ノードの値を正規化して取得。欠損は `null` のまま残す
+- `figma-impl/scripts/verify.js` — Playwright で実測し、ズレた行だけを出力。`--pr` で全要素の実測値と見比べ用の画像を PR にコメントする（証跡）
+
 ## 設計方針
 
 - **確認を手順に組み込む** — 生成物をそのまま確定せず、プレビューや推測箇所の明示を挟む
@@ -118,6 +133,16 @@ poppler が無い環境では、表紙のノンブル除外が機能せず警告
 
 `node`（層Aの lint の実行に使用。標準モジュールのみで動くので追加パッケージは不要）と `git`（検査対象の差分取得とシンボル照合に使用）。層BはAIの判断なので追加の依存は無い。
 
+### `figma-impl-init` / `figma-impl`
+
+Node.js 18 以降と、Figma の個人アクセストークン（環境変数 `FIGMA_TOKEN`）。検証スクリプトを使う場合は、検証対象のプロジェクト側に playwright が必要。
+
+```bash
+npm i -D playwright && npx playwright install chromium
+```
+
+検証結果を PR に投稿する（`verify.js --pr`）場合は、`gh` と、対象リポジトリへの push 権限が必要（画像を証跡専用ブランチ `figma-impl-evidence` に push するため）。
+
 ## インストール
 
 ```bash
@@ -125,6 +150,8 @@ git clone https://github.com/tttdddkkk/claude-skills.git ~/.claude/skills
 ```
 
 既に `~/.claude/skills` がある場合は、必要なスキルのディレクトリだけをコピーする。
+
+ただし `figma-impl-init` と `figma-impl` は**対でコピーする**。前者のスクリプトが後者の共有モジュール（`figma-impl/scripts/figma-api.js`）を参照しているため、片方だけでは動かない。
 
 ## 使い方
 
