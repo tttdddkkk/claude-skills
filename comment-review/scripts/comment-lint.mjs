@@ -37,7 +37,7 @@
  *   該当行に comment-lint-disable を含めるとその行をスキップ。
  */
 
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 // ---------------------------------------------------------------------------
@@ -379,11 +379,13 @@ function collectFromDiff(cmd) {
 function extractCommentsByLine(source) {
   const byLine = new Map();
   let inBlock = false;
+  // テンプレートリテラルは行をまたぐ。行ごとに初期化すると2行目以降の `//` を
+  // コメントと誤認する
+  let quote = null;
 
   source.split('\n').forEach((line, i) => {
     const startedInBlock = inBlock;
     let commentStart = null;
-    let quote = null;
     let j = 0;
 
     while (j < line.length) {
@@ -425,6 +427,9 @@ function extractCommentsByLine(source) {
       }
       j += 1;
     }
+
+    // ' と " は改行をまたげない。` だけ次の行へ持ち越す
+    if (quote === "'" || quote === '"') quote = null;
 
     // ブロックの途中から始まる行は、閉じるまで（閉じなければ行末まで）がコメント
     let text;
@@ -479,8 +484,6 @@ function extractCommentFromLine(text) {
 
 const symbolCache = new Map();
 
-// name は CITATION.symbol の `[A-Za-z_$][\\w$]*` でしか捕まらないため、シェルのメタ文字を
-// 含み得ない。この前提が崩れるので CITATION.symbol の文字種を広げないこと。
 function symbolExists(name) {
   if (symbolCache.has(name)) return symbolCache.get(name);
   let found = false;
@@ -490,11 +493,20 @@ function symbolExists(name) {
     // 両側に境界を置く。右だけだと xfoo しか無い状態で foo が「実在する」と誤判定される
     const left = '(^|[^[:alnum:]_$])';
     const right = '([^[:alnum:]_$]|$)';
+    // name に出うる ERE のメタ文字は $ だけ（CITATION.symbol の文字種による）。
+    // 素のままだと行末アンカーとして解釈され、user$ のような名前が一致しなくなる
+    const esc = name.replace(/\$/g, '\\$');
     const pattern =
-      `(function|class|const|let|var|type|interface|enum)[[:space:]]+${name}${right}` +
-      `|${left}${name}[[:space:]]*[:=][[:space:]]*(async[[:space:]]*)?\\(`;
-    const res = sh(`git grep -lE ${JSON.stringify(pattern)} -- ${JSON.stringify('*.*')} || true`);
-    found = res.trim().length > 0;
+      `(function|class|const|let|var|type|interface|enum)[[:space:]]+${esc}${right}` +
+      `|${left}${esc}[[:space:]]*[:=][[:space:]]*(async[[:space:]]*)?\\(`;
+    // name は `user$` のようにシェルのメタ文字を含みうる。シェルを通さず引数で渡す
+    const res = spawnSync('git', ['grep', '-lE', pattern, '--', '*.*'], {
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    // 終了コード 1 は「一致なし」。2 以上は grep 自体の失敗
+    if (res.error || res.status > 1) throw res.error ?? new Error(res.stderr);
+    found = res.stdout.trim().length > 0;
   } catch {
     found = true; // grep失敗時は誤検知を避けて通す
   }

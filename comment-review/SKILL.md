@@ -40,6 +40,16 @@ Bで人間がコメントを確定させると、コメントが「AIの推測�
 
 ### コミット前に機械チェックする
 
+**前提**: 対象リポジトリの `scripts/comment-lint.mjs` に実体が配置されていること。
+未配置なら `README.md` の「導入手順 2」に従ってコピーする。
+
+```bash
+cp <このスキル>/scripts/comment-lint.mjs scripts/comment-lint.mjs
+```
+
+一度きりの確認で配置したくない場合は、このスキルの `scripts/comment-lint.mjs` を
+直接指して実行してもよい（設定ファイルはカレントディレクトリから読む）。
+
 ```bash
 node scripts/comment-lint.mjs                  # ステージ済み差分
 node scripts/comment-lint.mjs --all            # 追跡中の全ファイル
