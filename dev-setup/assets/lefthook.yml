@@ -16,7 +16,7 @@ pre-commit:
     # （glob だけで発火条件を絞る）。error が1件でもあるとコミットが止まる。
     # 重大度は comment-lint.config.json で調整する。
     - name: comment-lint
-      glob: "*.{js,jsx,mjs,cjs,ts,tsx}"
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,vue,svelte,css,scss}"   # スクリプトの既定 targetExtensions と揃える
       run: node scripts/comment-lint.mjs
 
 # pull / マージのあと、lockfile が変わったときだけ依存を同期する。
