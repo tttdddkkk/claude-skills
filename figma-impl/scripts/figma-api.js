@@ -96,24 +96,36 @@ function extractText(node) {
 }
 
 function extractFrame(node) {
+  const layoutMode = pick(node, 'layoutMode');
+  // gap・padding・揃えは Auto Layout の属性で、Auto Layout 無しのフレームには元々存在しない。
+  // 読みにいくと null になり「欠損」に混ざるため、Auto Layout が有効なときだけ読む。
+  // layoutMode 自体が取れない場合は layoutMode の null だけで欠損として報告される。
+  const autoLayout = layoutMode !== null && layoutMode !== 'NONE'
+    ? {
+        itemSpacing: pick(node, 'itemSpacing'),
+        paddingLeft: pick(node, 'paddingLeft'),
+        paddingRight: pick(node, 'paddingRight'),
+        paddingTop: pick(node, 'paddingTop'),
+        paddingBottom: pick(node, 'paddingBottom'),
+        primaryAxisAlignItems: pick(node, 'primaryAxisAlignItems'),
+        counterAxisAlignItems: pick(node, 'counterAxisAlignItems'),
+      }
+    : {};
   return {
     id: node.id,
     name: node.name ?? null,
     type: node.type,
-    layoutMode: pick(node, 'layoutMode'),
-    itemSpacing: pick(node, 'itemSpacing'),
-    paddingLeft: pick(node, 'paddingLeft'),
-    paddingRight: pick(node, 'paddingRight'),
-    paddingTop: pick(node, 'paddingTop'),
-    paddingBottom: pick(node, 'paddingBottom'),
-    primaryAxisAlignItems: pick(node, 'primaryAxisAlignItems'),
-    counterAxisAlignItems: pick(node, 'counterAxisAlignItems'),
+    layoutMode,
+    ...autoLayout,
     absoluteBoundingBox: node.absoluteBoundingBox ?? null,
     cornerRadius: pick(node, 'cornerRadius'),
     fills: node.fills ?? null,
   };
 }
 
-const FRAME_TYPES = new Set(['FRAME', 'GROUP', 'COMPONENT', 'COMPONENT_SET', 'INSTANCE', 'SECTION']);
+// GROUP と SECTION は Auto Layout を持てないノードなので含めない。
+// 含めると fetch-node の欠損一覧と scan-file の「Auto Layout 無し」の割合が、
+// ファイルの作りと無関係に水増しされる。子ノードは walk で辿るので取りこぼしはない。
+const FRAME_TYPES = new Set(['FRAME', 'COMPONENT', 'COMPONENT_SET', 'INSTANCE']);
 
 module.exports = { parseFigmaUrl, getNodes, getFile, walk, extractText, extractFrame, mixedStyleInfo, FRAME_TYPES };

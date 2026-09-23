@@ -40,7 +40,7 @@ function toMarkdown(result) {
   L.push('| id | name | layout | gap | padding (L/R/T/B) |');
   L.push('| --- | --- | --- | --- | --- |');
   for (const fr of result.frames) {
-    const f = (v) => (v === null ? '**null**' : String(v));
+    const f = (v) => (v === null ? '**null**' : v === undefined ? '—' : String(v));
     L.push(`| \`${fr.id}\` | ${fr.name ?? ''} | ${f(fr.layoutMode)} | ${f(fr.itemSpacing)} | ${f(fr.paddingLeft)}/${f(fr.paddingRight)}/${f(fr.paddingTop)}/${f(fr.paddingBottom)} |`);
   }
 

@@ -24,7 +24,7 @@ ls .figma-impl/conversion.md .figma-impl/defaults.md 2>/dev/null
 - **`figma-impl` スキルが同じ親ディレクトリに置かれていること。**`scan-file.js` は
   `figma-impl/scripts/figma-api.js` を共有モジュールとして参照する。**この2つは対で導入する。**
   片方だけをコピーすると `scan-file.js` は起動しない
-- Node.js（`node` コマンドが使えること）
+- Node.js 18 以降（`figma-api.js` がグローバルの `fetch` を使うため）
 - `FIGMA_TOKEN` が環境変数に設定されていること（Figma の Settings → Security → Personal access tokens）
 - 対象 Figma ファイルの URL
 

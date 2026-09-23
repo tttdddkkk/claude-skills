@@ -135,7 +135,7 @@ poppler が無い環境では、表紙のノンブル除外が機能せず警告
 
 ### `figma-impl-init` / `figma-impl`
 
-Node.js と、Figma の個人アクセストークン（環境変数 `FIGMA_TOKEN`）。検証スクリプトを使う場合は、検証対象のプロジェクト側に playwright が必要。
+Node.js 18 以降と、Figma の個人アクセストークン（環境変数 `FIGMA_TOKEN`）。検証スクリプトを使う場合は、検証対象のプロジェクト側に playwright が必要。
 
 ```bash
 npm i -D playwright && npx playwright install chromium
