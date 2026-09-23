@@ -14,6 +14,8 @@ Node バージョン、既存の scripts 名、フレームワーク）を反映
 | `biome.json` | `biome.json` |
 | `lefthook.yml` | `lefthook.yml` |
 | `tsconfig.strict.json` | `tsconfig.json` にマージ |
+| `comment-lint.mjs` | `scripts/comment-lint.mjs` |
+| `comment-lint.config.json` | `comment-lint.config.json`（既定では置かない。重大度を変える場合のみ） |
 | `renovate.json` | `.github/renovate.json` |
 | `github/workflows/ci.yml` | `.github/workflows/ci.yml` |
 | `github/pull_request_template.md` | `.github/pull_request_template.md` |

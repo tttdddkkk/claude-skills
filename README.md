@@ -48,6 +48,8 @@ Markdown の解釈（章扉・Q&A・POINT/HINT/COLUMN カード・表への変�
 - `references/ci-recipes.md` — GitHub Actions の構成パターンと、CI 時間・コストを抑える書き方
 - `assets/` — 各設定ファイルの雛形
 
+導入対象のひとつに `comment-lint` がある。フォーマッターやリンターが見ないコメントの**内容**を検査するもので、推測・感想・変更履歴・根拠のない主張といった、AI が根拠として読むと誤った実装につながる記述を弾く。正規表現で確定判定できるルールだけを扱い、重大度は `comment-lint.config.json` で調整する（正当なコメントにも一致しうるルールは既定を warning にしてある）。pre-commit ではステージ済み差分、CI では PR 差分だけを対象にする。
+
 ### `pr-description`
 
 PR の説明文を書く。PR の作成・更新コマンドは実行せず、本文の生成に限定する（公式の `/commit-push-pr` と併用する想定）。

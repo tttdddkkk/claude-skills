@@ -1,0 +1,17 @@
+{
+  "targetExtensions": ["ts", "tsx", "js", "jsx", "mjs", "cjs"],
+  "ticketPattern": "\\b([A-Z]{2,10}-\\d+|#\\d+)\\b",
+  "allowedDocHosts": [
+    "figma.com",
+    "www.figma.com",
+    "developer.mozilla.org",
+    "caniuse.com",
+    "github.com",
+    "bugs.webkit.org",
+    "bugzilla.mozilla.org"
+  ],
+  "rules": {
+    "todo-requires-ticket": "error",
+    "no-speculation": "error"
+  }
+}

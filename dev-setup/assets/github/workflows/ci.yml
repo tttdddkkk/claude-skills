@@ -1,6 +1,7 @@
 # 前提（どちらも欠けると必ず落ちる）:
 #   1. リポジトリ直下に .node-version がある
 #   2. package.json に lint / typecheck / test の script がある
+# comment-lint ジョブを使う場合は scripts/comment-lint.mjs も必要（不要なら削除する）。
 # pnpm 前提。他のパッケージマネージャは references/ci-recipes.md の対応表で読み替える。
 # actions のタグは執筆時点の目安。導入時に現行メジャーを確認すること。
 name: CI
@@ -31,3 +32,18 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+
+  # コメントの内容を検査する。PR の差分だけを対象にする。
+  # `--all` にすると既存コードの指摘が一度に出て、無視される運用になるので使わない。
+  comment-lint:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # base との差分を取るため。浅いclone では merge-base が解決できない
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      # 依存パッケージを使わないので install は不要
+      - run: node scripts/comment-lint.mjs --base ${{ github.event.pull_request.base.sha }}
