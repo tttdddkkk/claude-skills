@@ -384,8 +384,11 @@ function symbolExists(name) {
   let found = false;
   try {
     // 宣言らしき箇所を探す。見つからなければ嘘の参照
-    // git grep -E は POSIX ERE。\\s は解釈されないので文字クラスで書く
-    const pattern = `(function|class|const|let|var|type|interface|enum)[[:space:]]+${name}\\b|${name}[[:space:]]*[:=][[:space:]]*(async[[:space:]]*)?\\(`;
+    // git grep -E は POSIX ERE。\\s も \\b も解釈されないため文字クラスで書く
+    const boundary = '([^[:alnum:]_$]|$)';
+    const pattern =
+      `(function|class|const|let|var|type|interface|enum)[[:space:]]+${name}${boundary}` +
+      `|${name}[[:space:]]*[:=][[:space:]]*(async[[:space:]]*)?\\(`;
     const res = sh(`git grep -lE ${JSON.stringify(pattern)} -- ${JSON.stringify('*.*')} || true`);
     found = res.trim().length > 0;
   } catch {
