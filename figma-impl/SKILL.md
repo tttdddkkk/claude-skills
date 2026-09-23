@@ -109,6 +109,7 @@ node ~/.claude/skills/figma-impl/scripts/verify.js --url <実装したページ�
 - レポートには、検証したコミット SHA、Figma ファイルの version、`nodes.json` のハッシュ、ブラウザのバージョン、**全要素**の Figma 値と実測値が載る
 - Figma の書き出し画像と実装のスクリーンショットを並べて載せる。画像は証跡専用ブランチ `figma-impl-evidence` に push し、コミット SHA 固定の URL で参照する。**画像は人が見るための参考で、判定には使わない**
 - 未コミットの変更がある、または手元の HEAD が PR の最新コミットと違う場合は投稿せずに止まる。証跡とコミットを一致させるため
+- **`--pr` には `gh`（認証済み）と、対象リポジトリへの push 権限が必要。**無い場合は投稿も画像の push もできずに止まる。そのときは `--pr` を外して実行し、`.figma-impl/evidence/` の `report.md` をそのまま人に渡す
 - `.figma-impl/tmp/` と `.figma-impl/evidence/` は `.gitignore` に入れる
 
 AI がすることは、投稿されたコメントの URL を伝えることだけ。**レポートを要約・転記して PR 本文や会話に「一致」と書かない。**

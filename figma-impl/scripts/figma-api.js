@@ -1,6 +1,7 @@
 // Figma REST API の薄いラッパと、ノードからの値抽出。
-// 欠損は必ず null のまま返す。ここで既定値を埋めると、
+// 欠損は null のまま返す。ここで推測の値を埋めると、
 // 「AIが創作した場所」の一覧が作れなくなる。
+// 例外は、API がレスポンスから省く既定値（公式仕様に default があるもの）。withDefault() を参照。
 'use strict';
 
 const API = 'https://api.figma.com/v1';

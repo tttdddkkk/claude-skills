@@ -1,0 +1,178 @@
+{
+  "runAt": "2026-09-23T10:07:46.795Z",
+  "command": "node verify.js --url file:///private/tmp/claude-501/-Users-ct/27a74b9b-bcb7-4c01-9542-ef2b9b637984/scratchpad/verify-proj/good.html --nodes /private/tmp/claude-501/-Users-ct/27a74b9b-bcb7-4c01-9542-ef2b9b637984/scratchpad/verify-proj/.figma-impl/tmp/nodes.json --pr 6",
+  "url": "file:///private/tmp/claude-501/-Users-ct/27a74b9b-bcb7-4c01-9542-ef2b9b637984/scratchpad/verify-proj/good.html",
+  "tolerance": 1,
+  "git": {
+    "sha": "efaa931b1145389870191f8fe8383e485faec758",
+    "dirty": false
+  },
+  "figma": {
+    "fileKey": "daNmBDmK1bbov1O2zoZaeL",
+    "fileName": "デジタル庁デザインシステム デザインデータ v2.18.0 (Community)",
+    "fileVersion": "2402356268370629014",
+    "fileLastModified": "2026-09-23T09:12:08Z",
+    "fetchedAt": "2026-09-23T10:01:54.852Z"
+  },
+  "nodesSha256": "2b9dbd8eef1e164703349d6998473bf23e618750510eb3482116e44fe47e178e",
+  "browserVersion": "153.0.8010.12",
+  "imageTargets": [
+    "31289:2",
+    "8403:33322"
+  ],
+  "nameById": {
+    "31289:5": "閉じる",
+    "8403:33322": "ガイドラインを見る",
+    "31289:2": "State=Default",
+    "31289:3": "Front Icon",
+    "31289:4": "close"
+  },
+  "results": [
+    {
+      "id": "31289:5",
+      "status": "OK",
+      "expected": {
+        "id": "31289:5",
+        "name": "閉じる",
+        "type": "TEXT",
+        "characters": "閉じる",
+        "fontFamily": "Noto Sans JP",
+        "fontPostScriptName": "NotoSansJP-Regular",
+        "fontWeight": 400,
+        "fontSize": 16,
+        "lineHeightPx": 16,
+        "lineHeightUnit": "FONT_SIZE_%",
+        "lineHeightPercentFontSize": 100,
+        "letterSpacing": 0.32,
+        "textCase": "ORIGINAL",
+        "textDecoration": "NONE",
+        "textAutoResize": "WIDTH_AND_HEIGHT",
+        "opentypeFlags": {},
+        "palt": 0,
+        "pwid": 0,
+        "fills": [
+          {
+            "blendMode": "NORMAL",
+            "type": "SOLID",
+            "color": {
+              "r": 0.10196078568696976,
+              "g": 0.10196078568696976,
+              "b": 0.10196078568696976,
+              "a": 1
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:7608:31907"
+              }
+            }
+          }
+        ],
+        "absoluteBoundingBox": {
+          "x": -6684,
+          "y": -8940,
+          "width": 49,
+          "height": 16
+        },
+        "styleMixed": false,
+        "mixedProperties": null
+      },
+      "actual": {
+        "id": "31289:5",
+        "found": true,
+        "fontSize": 16,
+        "lineHeight": "16px",
+        "letterSpacing": "0.32px",
+        "fontWeight": "400",
+        "fontFamily": "\"Noto Sans JP\", sans-serif",
+        "fontFeatureSettings": "\"palt\" 0",
+        "fontSynthesis": "none",
+        "width": 48.96875,
+        "height": 16,
+        "runWidth": 48.96875
+      },
+      "rows": []
+    },
+    {
+      "id": "8403:33322",
+      "status": "OK",
+      "expected": {
+        "id": "8403:33322",
+        "name": "ガイドラインを見る",
+        "type": "TEXT",
+        "characters": "ガイドラインを見る",
+        "fontFamily": "Noto Sans JP",
+        "fontPostScriptName": null,
+        "fontWeight": 500,
+        "fontSize": 20,
+        "lineHeightPx": 35,
+        "lineHeightUnit": "FONT_SIZE_%",
+        "lineHeightPercentFontSize": 175,
+        "letterSpacing": 0.8,
+        "textCase": "ORIGINAL",
+        "textDecoration": "UNDERLINE",
+        "textAutoResize": "WIDTH_AND_HEIGHT",
+        "opentypeFlags": {
+          "PWID": 1
+        },
+        "palt": 0,
+        "pwid": 1,
+        "fills": [
+          {
+            "blendMode": "NORMAL",
+            "type": "SOLID",
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1,
+              "a": 1
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:7608:31894"
+              }
+            }
+          }
+        ],
+        "absoluteBoundingBox": {
+          "x": -866,
+          "y": 2581,
+          "width": 187,
+          "height": 35
+        },
+        "styleMixed": false,
+        "mixedProperties": null
+      },
+      "actual": {
+        "id": "8403:33322",
+        "found": true,
+        "fontSize": 20,
+        "lineHeight": "35px",
+        "letterSpacing": "0.8px",
+        "fontWeight": "500",
+        "fontFamily": "\"Noto Sans JP\", sans-serif",
+        "fontFeatureSettings": "\"pwid\"",
+        "fontSynthesis": "none",
+        "width": 187.203125,
+        "height": 35,
+        "runWidth": 187.203125
+      },
+      "rows": []
+    }
+  ],
+  "images": [
+    {
+      "id": "31289:2",
+      "name": "State=Default",
+      "figma": "figma-31289-2.png",
+      "dom": "dom-31289-2.png"
+    },
+    {
+      "id": "8403:33322",
+      "name": "ガイドラインを見る",
+      "figma": "figma-8403-33322.png",
+      "dom": "dom-8403-33322.png"
+    }
+  ]
+}
