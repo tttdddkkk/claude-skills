@@ -368,13 +368,108 @@ function collectFromDiff(cmd) {
 // コメント抽出
 // ---------------------------------------------------------------------------
 
-function extractComment(text) {
+/**
+ * ファイル全体を走査して、行番号 -> コメント本文 の対応を作る。
+ *
+ * 行単位で `//` を探すと二つ取りこぼす。
+ *   1. `const u = "https://x"; // 推測コメント` — URL 内の `//` を先に拾ってしまう
+ *   2. 行頭に `*` を置かないブロックコメントの継続行 — 行だけ見ても中にいると分からない
+ * どちらも文字列リテラルとブロックの状態を持たないと判定できないため、ファイル単位で走査する。
+ */
+function extractCommentsByLine(source) {
+  const byLine = new Map();
+  let inBlock = false;
+
+  source.split('\n').forEach((line, i) => {
+    const startedInBlock = inBlock;
+    let commentStart = null;
+    let quote = null;
+    let j = 0;
+
+    while (j < line.length) {
+      const c = line[j];
+      const d = line[j + 1];
+
+      if (inBlock) {
+        if (c === '*' && d === '/') {
+          inBlock = false;
+          j += 2;
+          continue;
+        }
+        j += 1;
+        continue;
+      }
+      if (quote) {
+        if (c === '\\') {
+          j += 2;
+          continue;
+        }
+        if (c === quote) quote = null;
+        j += 1;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') {
+        quote = c;
+        j += 1;
+        continue;
+      }
+      if (c === '/' && d === '/') {
+        if (commentStart === null) commentStart = j;
+        break;
+      }
+      if (c === '/' && d === '*') {
+        if (commentStart === null) commentStart = j;
+        inBlock = true;
+        j += 2;
+        continue;
+      }
+      j += 1;
+    }
+
+    // ブロックの途中から始まる行は、閉じるまで（閉じなければ行末まで）がコメント
+    let text;
+    if (startedInBlock) {
+      const close = line.indexOf('*/');
+      text = close === -1 ? line : line.slice(0, close + 2);
+    } else if (commentStart !== null) {
+      text = line.slice(commentStart);
+    } else {
+      return;
+    }
+
+    const trimmed = text.trim();
+    if (trimmed) byLine.set(i + 1, trimmed);
+  });
+
+  return byLine;
+}
+
+/** 検査対象のリビジョンからファイル内容を取る。差分モードでも全体を読む必要がある */
+function fileSource(file) {
+  try {
+    if (scanAll) return readFileSync(file, 'utf8');
+    const rev = baseRef ? 'HEAD' : '';
+    return sh(`git show ${JSON.stringify(`${rev}:${file}`)}`);
+  } catch {
+    return null;
+  }
+}
+
+const commentCache = new Map();
+
+function commentsFor(file) {
+  if (!commentCache.has(file)) {
+    const source = fileSource(file);
+    commentCache.set(file, source === null ? null : extractCommentsByLine(source));
+  }
+  return commentCache.get(file);
+}
+
+/** ファイル内容が取れなかったときの退避。行だけで判断できる範囲に留める */
+function extractCommentFromLine(text) {
   const trimmed = text.trim();
   if (!trimmed) return null;
   if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) return trimmed;
-
-  const idx = trimmed.indexOf('//');
-  if (idx > 0 && !/https?:$/.test(trimmed.slice(0, idx))) return trimmed.slice(idx);
   return null;
 }
 
@@ -384,16 +479,20 @@ function extractComment(text) {
 
 const symbolCache = new Map();
 
+// name は CITATION.symbol の `[A-Za-z_$][\\w$]*` でしか捕まらないため、シェルのメタ文字を
+// 含み得ない。この前提が崩れるので CITATION.symbol の文字種を広げないこと。
 function symbolExists(name) {
   if (symbolCache.has(name)) return symbolCache.get(name);
   let found = false;
   try {
     // 宣言らしき箇所を探す。見つからなければ嘘の参照
     // git grep -E は POSIX ERE。\\s も \\b も解釈されないため文字クラスで書く
-    const boundary = '([^[:alnum:]_$]|$)';
+    // 両側に境界を置く。右だけだと xfoo しか無い状態で foo が「実在する」と誤判定される
+    const left = '(^|[^[:alnum:]_$])';
+    const right = '([^[:alnum:]_$]|$)';
     const pattern =
-      `(function|class|const|let|var|type|interface|enum)[[:space:]]+${name}${boundary}` +
-      `|${name}[[:space:]]*[:=][[:space:]]*(async[[:space:]]*)?\\(`;
+      `(function|class|const|let|var|type|interface|enum)[[:space:]]+${name}${right}` +
+      `|${left}${name}[[:space:]]*[:=][[:space:]]*(async[[:space:]]*)?\\(`;
     const res = sh(`git grep -lE ${JSON.stringify(pattern)} -- ${JSON.stringify('*.*')} || true`);
     found = res.trim().length > 0;
   } catch {
@@ -412,7 +511,7 @@ const findings = [];
 for (const { file, line, text } of collectLines()) {
   if (text.includes('comment-lint-disable')) continue;
 
-  const comment = extractComment(text);
+  const comment = commentsFor(file)?.get(line) ?? extractCommentFromLine(text);
   if (!comment) continue;
   if (/@license|Copyright|eslint-disable|@ts-|stylelint-disable|prettier-ignore/i.test(comment)) continue;
 
