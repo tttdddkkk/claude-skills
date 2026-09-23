@@ -29,11 +29,11 @@ function toMarkdown(result) {
   L.push(`- テキストノード: ${result.texts.length} / フレーム: ${result.frames.length}\n`);
 
   L.push(`## テキスト\n`);
-  L.push('| id | name | family | size | lineHeight | lhUnit | tracking | palt |');
-  L.push('| --- | --- | --- | --- | --- | --- | --- | --- |');
+  L.push('| id | name | family | weight | size | lineHeight(px) | lhUnit | tracking(px) | palt | pwid |');
+  L.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const t of result.texts) {
     const f = (v) => (v === null ? '**null**' : String(v));
-    L.push(`| \`${t.id}\` | ${t.name ?? ''} | ${f(t.fontPostScriptName ?? t.fontFamily)} | ${f(t.fontSize)} | ${f(t.lineHeightPx)} | ${f(t.lineHeightUnit)} | ${f(t.letterSpacing)} | ${f(t.palt)} |`);
+    L.push(`| \`${t.id}\` | ${t.name ?? ''} | ${f(t.fontPostScriptName ?? t.fontFamily)} | ${f(t.fontWeight)} | ${f(t.fontSize)} | ${f(t.lineHeightPx)} | ${f(t.lineHeightUnit)} | ${f(t.letterSpacing)} | ${f(t.palt)} | ${f(t.pwid)} |`);
   }
 
   L.push(`\n## フレーム\n`);
@@ -100,7 +100,10 @@ async function main() {
       if (node.type === 'TEXT') {
         const t = extractText(node);
         texts.push(t);
-        const nulls = nullPaths(t).filter((k) => !['opentypeFlags', 'mixedProperties'].includes(k));
+        // fontPostScriptName は仕様上 null を取りうる（DADS では 9551 件中 1398 件）。
+        // fontFamily と fontWeight が取れていればフォントは特定できるので欠損にしない。
+        const fontKnown = t.fontFamily !== null && t.fontWeight !== null;
+        const nulls = nullPaths(t).filter((k) => k !== 'mixedProperties' && !(k === 'fontPostScriptName' && fontKnown));
         if (nulls.length) missing.push({ id: t.id, name: t.name, fields: nulls });
         // 混在スタイルは「値が取れている」ように見えて代表値でしかない。
         // 欠損と同じ列に出して、実装が黙って1つの値を使うのを防ぐ。

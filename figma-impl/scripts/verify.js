@@ -22,7 +22,8 @@ function parseArgs(argv) {
 }
 
 // ブラウザ内で実測する。Range.getClientRects でテキストランの実アドバンス幅を取る。
-const MEASURE = `(ids) => ids.map((id) => {
+// 文字列で渡すと page.evaluate は式として評価するだけで関数を呼ばないため、関数のまま渡す。
+const MEASURE = (ids) => ids.map((id) => {
   const el = document.querySelector('[data-figma-id="' + id + '"]');
   if (!el) return { id, found: false };
   const cs = getComputedStyle(el);
@@ -44,7 +45,7 @@ const MEASURE = `(ids) => ids.map((id) => {
     width: box.width, height: box.height,
     runWidth,
   };
-})`;
+});
 
 // 差分の原因を切り分ける。ここが空になれば「数値は届いている」と確定でき、
 // 残る差異は追う必要のない床だと判断できる。
@@ -64,7 +65,17 @@ function classify(expected, actual, tol) {
       rows.push({ level: 'DIFF', cause: 'line-height のメトリクス問題', detail: `figma ${expected.lineHeightPx}px / dom ${actual.lineHeight}` });
     }
   }
-  if (expected.absoluteBoundingBox && expected.fontSize !== null && near(expected.fontSize, actual.fontSize)) {
+  // letter-spacing は 0.01〜0.08em 程度の差を見るので、±1px の閾値では何も検出できない。
+  // computed は px で返るので、Figma の px 値と直接比べる。
+  if (expected.letterSpacing !== null && actual.letterSpacing !== 'normal') {
+    const domLs = parseFloat(actual.letterSpacing);
+    if (!Number.isNaN(domLs) && Math.abs(expected.letterSpacing - domLs) > 0.05) {
+      rows.push({ level: 'DIFF', cause: 'letter-spacing 不一致', detail: `figma ${expected.letterSpacing}px / dom ${actual.letterSpacing}` });
+    }
+  }
+  // 幅で tracking / palt を疑えるのは、テキストボックスが文字列に合わせて伸縮する
+  // WIDTH_AND_HEIGHT のときだけ。固定幅・高さのみ自動のボックスは幅がボックスの幅なので比べない。
+  if (expected.textAutoResize === 'WIDTH_AND_HEIGHT' && expected.absoluteBoundingBox && expected.fontSize !== null && near(expected.fontSize, actual.fontSize)) {
     const w = expected.absoluteBoundingBox.width;
     const domW = actual.runWidth ?? actual.width;
     if (w != null && domW != null && Math.abs(w - domW) > tol) {

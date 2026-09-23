@@ -63,6 +63,7 @@ async function main() {
 
   const families = new Map();
   const letterSpacings = new Map();
+  const otFlags = new Map();
   const lineHeightUnits = new Map();
   const spacings = [];
   let textTotal = 0, paltOn = 0, paltAbsent = 0;
@@ -73,10 +74,17 @@ async function main() {
       textTotal++;
       const s = node.style || {};
       tally(families, s.fontPostScriptName || s.fontFamily || '(不明)');
-      tally(letterSpacings, s.letterSpacing === undefined ? '(指定なし)' : String(s.letterSpacing));
+      // REST は letterSpacing を px で返す（Figma 上で % 指定でも換算済み）。
+      // px のままだとフォントサイズごとに値が散るので、em に直して分布を見る。
+      tally(letterSpacings, s.letterSpacing === undefined || !s.fontSize
+        ? '(指定なし)'
+        : `${+(s.letterSpacing / s.fontSize).toFixed(4)}em`);
       tally(lineHeightUnits, s.lineHeightUnit || '(不明)');
       if (!s.opentypeFlags) paltAbsent++;
-      else if (s.opentypeFlags.PALT) paltOn++;
+      else {
+        if (s.opentypeFlags.PALT) paltOn++;
+        for (const [k, v] of Object.entries(s.opentypeFlags)) if (v) tally(otFlags, k);
+      }
     } else if (FRAME_TYPES.has(node.type)) {
       frameTotal++;
       if (!node.layoutMode || node.layoutMode === 'NONE') noAutoLayout++;
@@ -102,8 +110,12 @@ async function main() {
   else if (paltRatio <= 20) L.push(`**判定: 全体 OFF**。\`reset.css\` の \`font-feature-settings\` を \`"palt" 0\` にする。\n`);
   else L.push(`**判定: 混在（要判断）**。レイヤーごとの出し分けはしない方針なので、どちらに寄せるかを人が決める。\n`);
 
+  L.push(table('有効な OpenType 機能（PALT 以外も含む）', otFlags, textTotal));
+  if (otFlags.has('PWID')) {
+    L.push(`> PWID（プロポーショナル幅）が使われている。palt と同様に和文の字幅が変わるので、\`conversion.md\` の palt の節で扱いを決める。\n`);
+  }
   L.push(table('フォント', families, textTotal));
-  L.push(table('letterSpacing の分布', letterSpacings, textTotal));
+  L.push(table('letterSpacing の分布（letterSpacing ÷ fontSize）', letterSpacings, textTotal));
   L.push(table('lineHeightUnit の分布', lineHeightUnits, textTotal));
 
   L.push(`### 余白のスケール\n`);

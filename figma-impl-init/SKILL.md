@@ -42,8 +42,9 @@ node ~/.claude/skills/figma-impl-init/scripts/scan-file.js <FigmaのURL>
 
 - `PALT` が立っているテキストの割合（統一されているか、混在しているか）
 - 使われている fontFamily / fontPostScriptName の一覧
-- `letterSpacing` の分布と単位
-- `lineHeightUnit` の分布（AUTO / PIXELS / PERCENT）
+- PALT 以外の有効な OpenType 機能（PWID など）
+- `letterSpacing` の分布（REST API は px で返すので、fontSize で割った em で集計する）
+- `lineHeightUnit` の分布（`PIXELS` / `FONT_SIZE_%` / `INTRINSIC_%`。`INTRINSIC_%` が Figma の Auto）
 - `itemSpacing` / `padding*` の分布から判定した余白スケール（4px か 8px か）
 - Auto Layout が無いフレームの割合
 
