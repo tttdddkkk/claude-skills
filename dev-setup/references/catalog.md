@@ -92,6 +92,9 @@ Windows/macOS 混在チームや、CI とローカルで差分が出る場合に
 実行箇所は pre-commit と CI の両方。CI 側は `--base <sha>` で PR 差分だけを対象にする。
 `--all` を CI に入れると既存コードの指摘が一度に出て、ジョブごと無視される。
 
+検査対象から外すパスは `ignorePaths` で指定する。既定で lint 自身とフィクスチャを除外する
+（lint のソースはルール文字列を含むため、除外しないと自分自身を検出する）。
+
 Node 標準モジュールだけで動くので依存の追加は不要。配置先は `scripts/comment-lint.mjs`。
 
 ### Git hooks

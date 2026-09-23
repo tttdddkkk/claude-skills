@@ -27,6 +27,7 @@
  *     "targetExtensions": ["ts", "tsx"],
  *     "ticketPattern": "\\b(ABC-\\d+)\\b",
  *     "allowedDocHosts": ["wiki.example.co.jp"],
+ *     "ignorePaths": ["__fixtures__/"],
  *     "rules": { "todo-requires-ticket": "error", "no-decorative-comment": "off" }
  *   }
  *   rules の値は "error" / "warning" / "off"。
@@ -57,6 +58,11 @@ const DEFAULT_CONFIG = {
     'bugs.webkit.org',
     'bugzilla.mozilla.org',
   ],
+  /**
+   * 検査対象から外すパス（正規表現の文字列）。
+   * lint 自身はルール文字列を含むため、除外しないと自分自身を検出する。
+   */
+  ignorePaths: ['(^|/)comment-lint\\.mjs$', '__fixtures__/'],
   rules: {},
 };
 
@@ -95,6 +101,16 @@ try {
   fail(`ticketPattern が正規表現として不正です: ${e.message}`);
 }
 
+const IGNORE_PATHS = config.ignorePaths.map((p) => {
+  try {
+    return new RegExp(p);
+  } catch (e) {
+    fail(`ignorePaths の "${p}" が正規表現として不正です: ${e.message}`);
+  }
+});
+
+const isIgnored = (file) => IGNORE_PATHS.some((re) => re.test(file));
+
 /** 引用として認める記法 */
 const CITATION = {
   ticket: TICKET,
@@ -104,8 +120,9 @@ const CITATION = {
     `https?://(?:${config.allowedDocHosts.map((h) => h.replace(/\./g, '\\.')).join('|')})/\\S+`,
     'i',
   ),
-  // 同リポジトリ内のシンボル参照。行番号ではなく関数名・型名で指す
-  symbol: /(?:@see|@link)\s+([A-Za-z_$][\w$]*)/,
+  // 同リポジトリ内のシンボル参照。行番号ではなく関数名・型名で指す。
+  // 末尾の否定先読みで、パス（src/utils/foo.ts）やURLをシンボル名と誤認しないようにする
+  symbol: /(?:@see|@link)\s+([A-Za-z_$][\w$]*)(?![\w$./:\\-])/,
 };
 
 /** 引用が必要な主張のトリガー（誤検知を避けるため最初は狭く保つ） */
@@ -295,7 +312,9 @@ function collectLines() {
 }
 
 function collectFromWorktree() {
-  const files = sh('git ls-files').split('\n').filter((f) => f && TARGET_EXT.test(f));
+  const files = sh('git ls-files')
+    .split('\n')
+    .filter((f) => f && TARGET_EXT.test(f) && !isIgnored(f));
   const out = [];
   for (const file of files) {
     let content;
@@ -331,7 +350,7 @@ function collectFromDiff(cmd) {
       lineNo = m ? Number(m[1]) : 0;
       continue;
     }
-    if (!file || !TARGET_EXT.test(file)) continue;
+    if (!file || !TARGET_EXT.test(file) || isIgnored(file)) continue;
     if (raw.startsWith('+') && !raw.startsWith('+++')) {
       out.push({ file, line: lineNo, text: raw.slice(1) });
       lineNo += 1;
@@ -365,7 +384,8 @@ function symbolExists(name) {
   let found = false;
   try {
     // 宣言らしき箇所を探す。見つからなければ嘘の参照
-    const pattern = `(function|class|const|let|var|type|interface|enum)\\s+${name}\\b|${name}\\s*[:=]\\s*(async\\s*)?\\(`;
+    // git grep -E は POSIX ERE。\\s は解釈されないので文字クラスで書く
+    const pattern = `(function|class|const|let|var|type|interface|enum)[[:space:]]+${name}\\b|${name}[[:space:]]*[:=][[:space:]]*(async[[:space:]]*)?\\(`;
     const res = sh(`git grep -lE ${JSON.stringify(pattern)} -- ${JSON.stringify('*.*')} || true`);
     found = res.trim().length > 0;
   } catch {
