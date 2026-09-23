@@ -1,1 +1,4 @@
 .DS_Store
+
+# Claude Code が管理するスキル群。リポジトリを ~/.claude/skills に配置すると同居する
+/synced/
