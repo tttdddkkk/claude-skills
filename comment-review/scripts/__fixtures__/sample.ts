@@ -78,3 +78,17 @@ export const ok_figma = 20;
 
 // @see ok_citation
 export const ok_symbol = 21;
+
+// TODO(#123): GitHub issue 形式のチケット参照
+export const ok_todo_issue = 22;
+
+// 仕様上、手数料は3%固定（出典: #456）
+export const ok_citation_issue = 23;
+
+// TODO: issue#12 の対応待ち
+export const ok_todo_issue_word = 24;
+
+// ===== NG: warning（色コードの # は番号として扱わない） =====
+
+// TODO: 色を #333 に揃える
+export const ng_todo_hex_color = 25;

@@ -62,7 +62,7 @@ python3 lib/engine.py templates/<テンプレート名> <原稿.md> <出力.pdf>
 ```bash
 pip install markdown beautifulsoup4 playwright
 playwright install chromium
-brew install poppler   # pdftoppm / pdfunite
+brew install poppler   # pdftoppm / pdfunite / pdfinfo
 ```
 
 poppler が無い環境では、表紙のノンブル除外が機能せず、警告を出して全ページに入った状態で出力される。

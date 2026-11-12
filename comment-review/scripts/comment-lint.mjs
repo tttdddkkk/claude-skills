@@ -48,7 +48,10 @@ const CONFIG_FILE = 'comment-lint.config.json';
 
 const DEFAULT_CONFIG = {
   targetExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'vue', 'svelte', 'css', 'scss'],
-  ticketPattern: '\\b([A-Z]{2,10}-\\d+|#\\d+)\\b',
+  // 裸の `#数字` は CSS の色コード（#333）や実体参照（&#123;）と区別できないため、
+  // 括弧の直後か、issue / 出典 などの語の後に置かれたものだけをチケット参照とみなす
+  ticketPattern:
+    '\\b[A-Z]{2,10}-\\d+\\b|(?:[(（]|(?:[Ii]ssues?|PR|GH|[Rr]efs?|[Ff]ixe?s|[Cc]loses|出典|参照|チケット)\\s*[:：]?\\s*)#\\d+\\b',
   /** 設計書・仕様書として認めるドメイン。社内wikiはここに足す */
   allowedDocHosts: [
     'figma.com',

@@ -23,11 +23,12 @@ Markdownの解釈(章扉・Q&A・POINT/HINT/COLUMNカード・表などへの変
 
 - Python: `markdown`, `beautifulsoup4`, `playwright`(+ `playwright install chromium`)
 - プレビュー用: `pdftoppm`(poppler。Homebrewなら `brew install poppler`)
+- 表紙のノンブル除外(template.json の `nombre.skip_cover`)用: `pdfunite`、`pdfinfo`(いずれも poppler)。`pdfunite` が無いと警告を出して全ページにノンブルが入る
 
 確認コマンド例:
 ```
 python3 -c "import markdown, bs4, playwright" 2>&1
-which pdftoppm
+which pdftoppm pdfunite pdfinfo
 ```
 
 ## 1. テンプレートを選ぶ
