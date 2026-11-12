@@ -48,7 +48,8 @@ const CONFIG_FILE = 'comment-lint.config.json';
 
 const DEFAULT_CONFIG = {
   targetExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'vue', 'svelte', 'css', 'scss'],
-  ticketPattern: '\\b([A-Z]{2,10}-\\d+|#\\d+)\\b',
+  // `#` は単語文字ではないため、前に \b を置くと「(#123」「 #123」に一致しない。否定後読みで境界を取る
+  ticketPattern: '\\b[A-Z]{2,10}-\\d+\\b|(?<![\\w#])#\\d+\\b',
   /** 設計書・仕様書として認めるドメイン。社内wikiはここに足す */
   allowedDocHosts: [
     'figma.com',

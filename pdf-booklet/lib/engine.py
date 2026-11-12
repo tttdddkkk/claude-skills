@@ -49,7 +49,7 @@ def transform(html: str, css: str, palette: list) -> str:
 
     # ===== h3: Qマーカー =====
     for h3 in soup.find_all("h3"):
-        m = re.match(r"^(Q\d*|Q)[..\s]*(.*)$", h3.get_text())
+        m = re.match(r"^(Q\d*|Q)[.．\s]*(.*)$", h3.get_text())
         if m and not h3.get_text().startswith("コラム"):
             h3.clear()
             q = soup.new_tag("span", **{"class": "q-marker"})
@@ -84,7 +84,7 @@ def transform(html: str, css: str, palette: list) -> str:
     # ===== ヒントカード(コラムより先に生成すること) =====
     for p in soup.find_all("p"):
         if p.get_text().lstrip().startswith("ヒント"):
-            inner = re.sub(r"^\s*ヒント[::]\s*", "", p.decode_contents())
+            inner = re.sub(r"^\s*ヒント[:：]\s*", "", p.decode_contents())
             box = soup.new_tag("div", **{"class": "hint-box"})
             label = soup.new_tag("div", **{"class": "hint-label"})
             label.string = "HINT"
@@ -100,8 +100,8 @@ def transform(html: str, css: str, palette: list) -> str:
         st = li.find("strong")
         if st and li.contents and li.contents[0] is st:
             nxt = st.next_sibling
-            if nxt and isinstance(nxt, str) and re.match(r"^\s*[::]", nxt):
-                rest = re.sub(r"^\s*[::]\s*", "", nxt)
+            if nxt and isinstance(nxt, str) and re.match(r"^\s*[:：]", nxt):
+                rest = re.sub(r"^\s*[:：]\s*", "", nxt)
                 nxt.extract()
                 desc = soup.new_tag("span", **{"class": "li-desc"})
                 desc.append(rest)
@@ -119,7 +119,7 @@ def transform(html: str, css: str, palette: list) -> str:
             t = p.get_text().lstrip()
             for label, cls in (("NG", "ng"), ("OK", "ok")):
                 if t.startswith(label):
-                    inner = re.sub(r"^\s*" + label + r"[::]?\s*", "", p.decode_contents())
+                    inner = re.sub(r"^\s*" + label + r"[:：]?\s*", "", p.decode_contents())
                     p.clear()
                     badge = soup.new_tag("span", **{"class": f"bq-badge {cls}"})
                     badge.string = label
@@ -140,7 +140,7 @@ def transform(html: str, css: str, palette: list) -> str:
         h3.insert_before(box)
         box.append(label)
         h3["class"] = "column-head"
-        h3.string = re.sub(r"^コラム[::]\s*", "", text)
+        h3.string = re.sub(r"^コラム[:：]\s*", "", text)
         node = box.next_sibling
         while node is not None:
             nxt = node.next_sibling
@@ -172,7 +172,7 @@ def transform(html: str, css: str, palette: list) -> str:
     current, idx = None, 0
     for node in list(soup.children):
         if getattr(node, "name", None) == "h2":
-            m = re.match(r"^(第(\d+)章|実践編(\d+)|付録|まとめ|おわりに)[\s::]*(.*)$", node.get_text())
+            m = re.match(r"^(第(\d+)章|実践編(\d+)|付録|まとめ|おわりに)[\s:：]*(.*)$", node.get_text())
             color = palette[idx % len(palette)]
             idx += 1
             current = soup.new_tag("section", **{"class": "chapter"})
@@ -446,6 +446,13 @@ def _footer_html(n: dict) -> str:
             f' padding:0 18mm; text-align:{n["align"]};'
             f' font-family:{n["font_family"]};">{body}</div>')
 
+def _page_count(pdf_path: str) -> int:
+    out = subprocess.run(["pdfinfo", pdf_path], capture_output=True, text=True, check=True).stdout
+    m = re.search(r"^Pages:\s+(\d+)", out, re.M)
+    if not m:
+        raise RuntimeError(f"pdfinfo の出力からページ数を読めません: {pdf_path}")
+    return int(m.group(1))
+
 def html_to_pdf(html: str, out_path: str, nombre=None, pagination=None):
     n = {**DEFAULT_NOMBRE, **(nombre or {})}
     pg = {**DEFAULT_PAGINATION, **(pagination or {})}
@@ -455,9 +462,10 @@ def html_to_pdf(html: str, out_path: str, nombre=None, pagination=None):
     # 表紙だけノンブルを外す場合は、1ページ目と2ページ目以降を別々に書き出して結合する。
     # Chromiumのフッターはページごとに出し分けられないため、この方法しかない。
     # page_ranges で分割してもノンブルは振り直されない(検証済み)。
-    skip_cover = bool(n["skip_cover"]) and shutil.which("pdfunite") is not None
+    skip_cover = (bool(n["skip_cover"]) and shutil.which("pdfunite") is not None
+                  and shutil.which("pdfinfo") is not None)
     if bool(n["skip_cover"]) and not skip_cover:
-        print("警告: pdfunite(poppler)が無いため、表紙のノンブルを除外できません。"
+        print("警告: pdfunite / pdfinfo(poppler)が無いため、表紙のノンブルを除外できません。"
               "全ページに入った状態で出力します。", file=sys.stderr)
 
     with sync_playwright() as pw:
@@ -473,13 +481,19 @@ def html_to_pdf(html: str, out_path: str, nombre=None, pagination=None):
                 rest = str(pathlib.Path(td) / "rest.pdf")
                 page.pdf(path=cover, display_header_footer=False,
                          page_ranges="1", **common)
+                # 1ページだけの原稿では "2-" の書き出しが失敗する。それ以外の失敗まで
+                # 1ページ扱いにすると表紙だけの PDF が OK として出るため、ページ数で確かめる
                 has_rest = True
                 try:
                     page.pdf(path=rest, display_header_footer=True,
                              header_template="<span></span>", footer_template=footer,
                              page_ranges="2-", **common)
                 except Exception:
-                    has_rest = False  # 全1ページの原稿
+                    full = str(pathlib.Path(td) / "full.pdf")
+                    page.pdf(path=full, display_header_footer=False, **common)
+                    if _page_count(full) > 1:
+                        raise
+                    has_rest = False
                 if has_rest:
                     subprocess.run(["pdfunite", cover, rest, out_path], check=True)
                 else:

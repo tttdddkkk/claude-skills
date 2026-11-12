@@ -78,3 +78,9 @@ export const ok_figma = 20;
 
 // @see ok_citation
 export const ok_symbol = 21;
+
+// TODO(#123): GitHub issue 形式のチケット参照
+export const ok_todo_issue = 22;
+
+// 仕様上、手数料は3%固定（出典: #456）
+export const ok_citation_issue = 23;
