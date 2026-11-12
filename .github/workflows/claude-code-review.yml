@@ -94,7 +94,8 @@ jobs:
           retention-days: 7
 
       - name: レビュー結果を集計して判定を投稿
-        if: always()
+        # always() だと concurrency で取り消された古い実行も「判定不能」を投稿する
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -113,9 +114,9 @@ jobs:
           # original_commit_id で判定する。
           gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/comments" \
             --jq '.[] | select(.user.login == "claude[bot]" and .original_commit_id == env.HEAD_SHA) | .body
-                  | if test("^[\\s*_]*(🔴\\s*)?CRITICAL") then "CRITICAL"
-                    elif test("^[\\s*_]*(🟡\\s*)?WARNING") then "WARNING"
-                    elif test("^[\\s*_]*(🔵\\s*)?INFO") then "INFO"
+                  | if test("^[\\s*_#>\\[(:🔴🟡🔵]*CRITICAL") then "CRITICAL"
+                    elif test("^[\\s*_#>\\[(:🔴🟡🔵]*WARNING") then "WARNING"
+                    elif test("^[\\s*_#>\\[(:🔴🟡🔵]*INFO") then "INFO"
                     else "UNLABELED" end' > labels.txt || : > labels.txt
 
           count() { grep -cxF "$1" labels.txt || true; }

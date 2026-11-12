@@ -49,7 +49,7 @@ def transform(html: str, css: str, palette: list) -> str:
 
     # ===== h3: Qマーカー =====
     for h3 in soup.find_all("h3"):
-        m = re.match(r"^(Q\d*|Q)[.．\s]*(.*)$", h3.get_text())
+        m = re.match(r"^(Q\d+|Q(?=[.．\s]|$))[.．\s]*(.*)$", h3.get_text())
         if m and not h3.get_text().startswith("コラム"):
             h3.clear()
             q = soup.new_tag("span", **{"class": "q-marker"})
@@ -462,10 +462,9 @@ def html_to_pdf(html: str, out_path: str, nombre=None, pagination=None):
     # 表紙だけノンブルを外す場合は、1ページ目と2ページ目以降を別々に書き出して結合する。
     # Chromiumのフッターはページごとに出し分けられないため、この方法しかない。
     # page_ranges で分割してもノンブルは振り直されない(検証済み)。
-    skip_cover = (bool(n["skip_cover"]) and shutil.which("pdfunite") is not None
-                  and shutil.which("pdfinfo") is not None)
+    skip_cover = bool(n["skip_cover"]) and shutil.which("pdfunite") is not None
     if bool(n["skip_cover"]) and not skip_cover:
-        print("警告: pdfunite / pdfinfo(poppler)が無いため、表紙のノンブルを除外できません。"
+        print("警告: pdfunite(poppler)が無いため、表紙のノンブルを除外できません。"
               "全ページに入った状態で出力します。", file=sys.stderr)
 
     with sync_playwright() as pw:
@@ -489,9 +488,16 @@ def html_to_pdf(html: str, out_path: str, nombre=None, pagination=None):
                              header_template="<span></span>", footer_template=footer,
                              page_ranges="2-", **common)
                 except Exception:
-                    full = str(pathlib.Path(td) / "full.pdf")
-                    page.pdf(path=full, display_header_footer=False, **common)
-                    if _page_count(full) > 1:
+                    # 判定できないとき(pdfinfo が無い、判定自体が失敗した)は元の例外を上げる
+                    single = False
+                    if shutil.which("pdfinfo") is not None:
+                        try:
+                            full = str(pathlib.Path(td) / "full.pdf")
+                            page.pdf(path=full, display_header_footer=False, **common)
+                            single = _page_count(full) <= 1
+                        except Exception:
+                            pass
+                    if not single:
                         raise
                     has_rest = False
                 if has_rest:

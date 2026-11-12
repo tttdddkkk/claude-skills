@@ -84,3 +84,11 @@ export const ok_todo_issue = 22;
 
 // 仕様上、手数料は3%固定（出典: #456）
 export const ok_citation_issue = 23;
+
+// TODO: issue#12 の対応待ち
+export const ok_todo_issue_word = 24;
+
+// ===== NG: warning（色コードの # は番号として扱わない） =====
+
+// TODO: 色を #333 に揃える
+export const ng_todo_hex_color = 25;
